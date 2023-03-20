@@ -34,6 +34,7 @@ class Main:
     def __init__(self) -> None:
         self.availableColours = ["purple", "DarkSlateGray4", "deep sky blue", "light sea green", "VioletRed2", "gold"]
         self.wallpaper = Wallpaper()
+
         self.mainLoop()
         
     def mainLoop(self) -> None:
@@ -43,6 +44,8 @@ class Main:
 
         self.selectedOption = StringVar(root)
         self.selectedOption.set("Cheap      ")
+        self.liningOp = IntVar()
+        self.pasteOp = IntVar()
 
         self.cvsMainDisp = Canvas()
         self.cvsFirstOp = Canvas()
@@ -80,16 +83,31 @@ class Main:
             cvsColours[i].bind("<Button-1>", self.colourClick)
             cvsColours[i].place(anchor=NW, x=self.cvsMainDisp.winfo_width()+xStart+15, y=yStart+(i*2*self.cvsMainDisp.winfo_height()/7))
 
-
-        fontObj = tf.Font(size=10)
+        xStart = 64
         lblQuality = Label(frmL, text="Choose Quality:", bg=frmL["background"])
-        lblQuality.config(font=fontObj)
-        lblQuality.place(anchor=NE, x=frmL.winfo_width()-xStart-32, y=yStart)
+        lblQuality.config(font=tf.Font(size=12))
+        lblQuality.place(anchor=NE, x=frmL.winfo_width()-xStart-16, y=yStart)
         root.update()
-        fontObj = tf.Font(size=14)
         drpQuality = OptionMenu(frmL, self.selectedOption, "Cheap      ", *["Expensive"], command=self.qualitySelect)
-        drpQuality.config(font=fontObj)
+        drpQuality.config(font=tf.Font(size=14), bg = "#C2C2C2")
         drpQuality.place(anchor=NE, x=frmL.winfo_width()-xStart, y=yStart+lblQuality.winfo_height())
+        root.update()
+
+        lblAdditions = Label(frmL, text="Additions", bg="darkgray")
+        lblAdditions.config(font=tf.Font(size=12))
+        lblAdditions.place(anchor=NE, x=frmL.winfo_width()-xStart+16, y=yStart+drpQuality.winfo_y()+48, width=drpQuality.winfo_width()+16)
+        root.update()
+        frmAdditions = Frame(frmL, bg="#C2C2C2")
+        frmAdditions.place(anchor=NW, x=lblAdditions.winfo_x(), y=lblAdditions.winfo_y()+lblAdditions.winfo_height(), width=lblAdditions.winfo_width(), 
+                           height=cvsColours[5].winfo_y()+cvsColours[5].winfo_height()-lblAdditions.winfo_y()-lblAdditions.winfo_height())
+        root.update()
+        chkLining = Checkbutton(frmAdditions, text="Lining Paper", variable=self.liningOp, bg=frmAdditions["background"], command=self.additiohsSelect)
+        chkLining.config(font=tf.Font(size=12))
+        chkLining.place(anchor=NW, y=2)
+        root.update()
+        chkPaste = Checkbutton(frmAdditions, text="Wallpaper Paste", variable=self.pasteOp, bg=frmAdditions["background"], command=self.additiohsSelect)
+        chkPaste.config(font=tf.Font(size=12))
+        chkPaste.place(anchor=NW, y=chkLining.winfo_height()+8)
 
     def drawWallpaper(self, firstDesign: bool, canvas: Canvas, colour: str) -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
@@ -146,5 +164,12 @@ class Main:
 
     def qualitySelect(self, selection: str) -> None:
         self.wallpaper.quality = WallpaperQualities[((selection).upper()).strip()]
+    def additiohsSelect(self):
+        if self.liningOp.get() == 0:
+            self.wallpaper.liningPaper = False
+        else: self.wallpaper.liningPaper = True
+        if self.pasteOp.get() == 0:
+            self.wallpaper.paste = False
+        else: self.wallpaper.paste = True
 
 Main()
