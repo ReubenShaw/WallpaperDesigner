@@ -142,7 +142,17 @@ class Main:
         root.update()
 
         btnAdd = Button(frmL, text="Add to Basket", fg="white", bg="orange", command=self.addClick)
+        btnAdd.config(font=tf.Font(size=12, weight="bold"))
         btnAdd.place(anchor=NW, x=lblRolls.winfo_x(), y=spnRolls.winfo_y()+spnRolls.winfo_height()+20, width=lblRolls.winfo_width(), height=48)
+
+
+        lblTitle = Label(root, text="Design a new Wallpaper")
+        lblTitle.config(font=tf.Font(size=28))
+        lblTitle.place(anchor=NW, x=38, y=12)
+
+        btnOrder = Button(root, text="View Order", fg="white", bg="orange")
+        btnOrder.config(font=tf.Font(size=12, weight="bold"))
+        btnOrder.place(anchor=SW, x=16, y=frmL.winfo_height()-16, width=lblRolls.winfo_width(), height=48)
 
     def drawWallpaper(self, firstDesign: bool, canvas: Canvas, colour: str) -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
