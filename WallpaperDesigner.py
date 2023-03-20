@@ -17,10 +17,11 @@ class Windows(Enum):
     VIEW_ORDER = 1
 
 class Wallpaper:
-    def __init__(self, firstDesign = True, colour: str = "purple", quality: WallpaperQualities = WallpaperQualities.CHEAP, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
+    def __init__(self, firstDesign = True, colour: str = "purple", rolls: int = 0, quality: WallpaperQualities = WallpaperQualities.CHEAP, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
         self.firstDesign = firstDesign
         self.colour = colour
-        
+        self.rolls = rolls
+
         self.quality = quality
         self.addition = addition
         self.liningPaper = liningPaper
@@ -34,6 +35,7 @@ class Main:
     def __init__(self) -> None:
         self.availableColours = ["purple", "DarkSlateGray4", "deep sky blue", "light sea green", "VioletRed2", "gold"]
         self.wallpaper = Wallpaper()
+        self.order = []
 
         self.mainLoop()
         
@@ -47,6 +49,7 @@ class Main:
         self.liningOp = IntVar()
         self.pasteOp = IntVar()
         self.modificationOp = StringVar(root, "NONE")
+        self.rollsOp = StringVar(root, value=0)
 
         self.cvsMainDisp = Canvas()
         self.cvsFirstOp = Canvas()
@@ -128,6 +131,19 @@ class Main:
             Radiobutton(frmModifications, variable=self.modificationOp, text=text, value=value, bg=frmModifications["background"], command=self.modificationsSelect).place(anchor=NW, y=2+i*22)
             i+=1
 
+        root.update()
+        lblRolls = Label(frmL, text="Rolls", bg=frmL["background"])
+        lblRolls.config(font=tf.Font(size=12))
+        lblRolls.place(anchor=NW, x=lblAdditions.winfo_x(), y=lblModifications.winfo_y(), width=frmAdditions.winfo_width())
+        root.update()
+        spnRolls = Spinbox(frmL, from_=1, to=50, textvariable=self.rollsOp, command=self.rollsSelect)
+        spnRolls.config(font=tf.Font(size=14))
+        spnRolls.place(anchor=NW, x=lblRolls.winfo_x(), y=lblRolls.winfo_y()+lblRolls.winfo_height(), width=lblRolls.winfo_width())
+        root.update()
+
+        btnAdd = Button(frmL, text="Add to Basket", fg="white", bg="orange", command=self.addClick)
+        btnAdd.place(anchor=NW, x=lblRolls.winfo_x(), y=spnRolls.winfo_y()+spnRolls.winfo_height()+20, width=lblRolls.winfo_width(), height=48)
+
     def drawWallpaper(self, firstDesign: bool, canvas: Canvas, colour: str) -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
         if firstDesign:
@@ -192,5 +208,10 @@ class Main:
         else: self.wallpaper.paste = True
     def modificationsSelect(self):
         self.wallpaper.quality = WallpaperAdditions[self.modificationOp.get()]
+    def rollsSelect(self):
+        self.wallpaper.rolls = self.rollsOp.get()
+
+    def addClick(self):
+        self.order.append(self.wallpaper)
 
 Main()
