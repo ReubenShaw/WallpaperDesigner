@@ -1,7 +1,8 @@
 from enum import Enum
 from tkinter import *
+import tkinter.font as tf
 
-class WallpaperTypes(Enum): #REDO, PRICES WRONG
+class WallpaperQualities(Enum): #REDO, PRICES WRONG
     CHEAP = 0.03
     EXPENSIVE = 0.06
 
@@ -16,11 +17,11 @@ class Windows(Enum):
     VIEW_ORDER = 1
 
 class Wallpaper:
-    def __init__(self, firstDesign = False, colour: str = "purple", type: WallpaperTypes = WallpaperTypes.CHEAP, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
+    def __init__(self, firstDesign = True, colour: str = "purple", quality: WallpaperQualities = WallpaperQualities.CHEAP, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
         self.firstDesign = firstDesign
         self.colour = colour
         
-        self.type = type
+        self.quality = quality
         self.addition = addition
         self.liningPaper = liningPaper
         self.paste = paste
@@ -39,6 +40,9 @@ class Main:
         root = Tk()
         root.geometry("960x540")
         root.title("Wallpaper Designer")
+
+        self.selectedOption = StringVar(root)
+        self.selectedOption.set("Cheap      ")
 
         self.cvsMainDisp = Canvas()
         self.cvsFirstOp = Canvas()
@@ -75,6 +79,17 @@ class Main:
             cvsColours.append(Frame(frmL, width=self.cvsMainDisp.winfo_width()/7, height=self.cvsMainDisp.winfo_height()/7, bg=self.availableColours[i]))
             cvsColours[i].bind("<Button-1>", self.colourClick)
             cvsColours[i].place(anchor=NW, x=self.cvsMainDisp.winfo_width()+xStart+15, y=yStart+(i*2*self.cvsMainDisp.winfo_height()/7))
+
+
+        fontObj = tf.Font(size=10)
+        lblQuality = Label(frmL, text="Choose Quality:", bg=frmL["background"])
+        lblQuality.config(font=fontObj)
+        lblQuality.place(anchor=NE, x=frmL.winfo_width()-xStart-32, y=yStart)
+        root.update()
+        fontObj = tf.Font(size=14)
+        drpQuality = OptionMenu(frmL, self.selectedOption, "Cheap      ", *["Expensive"], command=self.qualitySelect)
+        drpQuality.config(font=fontObj)
+        drpQuality.place(anchor=NE, x=frmL.winfo_width()-xStart, y=yStart+lblQuality.winfo_height())
 
     def drawWallpaper(self, firstDesign: bool, canvas: Canvas, colour: str) -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
@@ -128,5 +143,8 @@ class Main:
             self.wallpaper.firstDesign = False
         self.cvsMainDisp.delete("all")
         self.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
+
+    def qualitySelect(self, selection: str) -> None:
+        self.wallpaper.quality = WallpaperQualities[((selection).upper()).strip()]
 
 Main()
