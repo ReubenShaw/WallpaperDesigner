@@ -46,6 +46,7 @@ class Main:
         self.selectedOption.set("Cheap      ")
         self.liningOp = IntVar()
         self.pasteOp = IntVar()
+        self.modificationOp = StringVar(root, "NONE")
 
         self.cvsMainDisp = Canvas()
         self.cvsFirstOp = Canvas()
@@ -101,13 +102,31 @@ class Main:
         frmAdditions.place(anchor=NW, x=lblAdditions.winfo_x(), y=lblAdditions.winfo_y()+lblAdditions.winfo_height(), width=lblAdditions.winfo_width(), 
                            height=cvsColours[5].winfo_y()+cvsColours[5].winfo_height()-lblAdditions.winfo_y()-lblAdditions.winfo_height())
         root.update()
-        chkLining = Checkbutton(frmAdditions, text="Lining Paper", variable=self.liningOp, bg=frmAdditions["background"], command=self.additiohsSelect)
+        chkLining = Checkbutton(frmAdditions, text="Lining Paper", variable=self.liningOp, bg=frmAdditions["background"], command=self.additionsSelect)
         chkLining.config(font=tf.Font(size=12))
         chkLining.place(anchor=NW, y=2)
         root.update()
-        chkPaste = Checkbutton(frmAdditions, text="Wallpaper Paste", variable=self.pasteOp, bg=frmAdditions["background"], command=self.additiohsSelect)
+        chkPaste = Checkbutton(frmAdditions, text="Wallpaper Paste", variable=self.pasteOp, bg=frmAdditions["background"], command=self.additionsSelect)
         chkPaste.config(font=tf.Font(size=12))
         chkPaste.place(anchor=NW, y=chkLining.winfo_height()+8)
+
+        xStart = 32
+        lblModifications = Label(frmL, text="Modifications", bg="darkgray")
+        lblModifications.config(font=tf.Font(size=12))
+        lblModifications.place(anchor=NW, x=xStart, y=self.cvsFirstOp.winfo_y()+self.cvsFirstOp.winfo_height()+128, width=self.cvsMainDisp.winfo_width()+cvsColours[0].winfo_width()+15)
+        root.update()
+        frmModifications = Frame(frmL, bg="#C2C2C2")
+        frmModifications.place(anchor=NW, x=xStart, y=lblModifications.winfo_y()+lblModifications.winfo_height(), width=lblModifications.winfo_width(), height = 96)
+
+        values = {"None" : "NONE",
+                  "Foil" : "FOIL",
+                  "Glitter" : "GLITTER",
+                  "Embossing" : "EMBOSSING"}
+        rdbModifications = []
+        i = 0
+        for (text, value) in values.items():
+            Radiobutton(frmModifications, variable=self.modificationOp, text=text, value=value, bg=frmModifications["background"], command=self.modificationsSelect).place(anchor=NW, y=2+i*22)
+            i+=1
 
     def drawWallpaper(self, firstDesign: bool, canvas: Canvas, colour: str) -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
@@ -164,12 +183,14 @@ class Main:
 
     def qualitySelect(self, selection: str) -> None:
         self.wallpaper.quality = WallpaperQualities[((selection).upper()).strip()]
-    def additiohsSelect(self):
+    def additionsSelect(self):
         if self.liningOp.get() == 0:
             self.wallpaper.liningPaper = False
         else: self.wallpaper.liningPaper = True
         if self.pasteOp.get() == 0:
             self.wallpaper.paste = False
         else: self.wallpaper.paste = True
+    def modificationsSelect(self):
+        self.wallpaper.quality = WallpaperAdditions[self.modificationOp.get()]
 
 Main()
