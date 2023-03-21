@@ -33,16 +33,26 @@ class Wallpaper:
 
 class Main:
     def __init__(self) -> None:
-        self.availableColours = ["purple", "DarkSlateGray4", "deep sky blue", "light sea green", "VioletRed2", "gold"]
-        self.wallpaper = Wallpaper()
-        self.order = []
-
         self.mainLoop()
         
     def mainLoop(self) -> None:
         root = Tk()
         root.geometry("960x540")
         root.title("Wallpaper Designer")
+
+        self.viewWallpaper = ViewWallpaper(root)
+        self.viewWallpaper.drawWindow(root)
+
+        root.mainloop()
+
+        
+    
+
+class ViewWallpaper:
+    def __init__(self, root: Tk) -> None:
+        self.availableColours = ["purple", "DarkSlateGray4", "deep sky blue", "light sea green", "VioletRed2", "gold"]
+        self.wallpaper = Wallpaper()
+        self.order = []
 
         self.selectedOption = StringVar(root)
         self.selectedOption.set("Cheap      ")
@@ -54,9 +64,6 @@ class Main:
         self.cvsMainDisp = Canvas()
         self.cvsFirstOp = Canvas()
         self.cvsSecondOp = Canvas()
-        self.drawWindow(root)
-
-        root.mainloop()
 
     def drawWindow(self, root: Tk) -> None:
         frmL = Frame(root, bg="lightgray")
@@ -66,7 +73,7 @@ class Main:
         self.cvsMainDisp = Canvas(frmL, width=126, height=126, bg="white")
         self.cvsMainDisp.place(anchor=NW, x=xStart, y=yStart)
         root.update()
-        self.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
+        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour, self.cvsMainDisp)
 
         self.cvsFirstOp = Canvas(frmL, width=56, height=56, bg=self.cvsMainDisp["background"])
         self.cvsFirstOp.bind("<Button-1>", self.designClick)
@@ -77,8 +84,8 @@ class Main:
         self.cvsSecondOp.place(anchor=NW, x=self.cvsFirstOp.winfo_width()+xStart+15, y=self.cvsMainDisp.winfo_height()+yStart+15)
         root.update()
 
-        self.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour)
-        self.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour)
+        Draw.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour, self.cvsMainDisp)
+        Draw.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour, self.cvsMainDisp)
 
 
         cvsColours = []
@@ -154,7 +161,40 @@ class Main:
         btnOrder.config(font=tf.Font(size=12, weight="bold"))
         btnOrder.place(anchor=SW, x=16, y=frmL.winfo_height()-16, width=lblRolls.winfo_width(), height=48)
 
-    def drawWallpaper(self, firstDesign: bool, canvas: Canvas, colour: str) -> None:
+    def colourClick(self, event: Event) -> None:
+        caller = event.widget
+        self.wallpaper.colour = caller["background"]
+        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour, self.cvsMainDisp)
+        Draw.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour, self.cvsMainDisp)
+        Draw.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour, self.cvsMainDisp)
+    def designClick(self, event: Event) -> None:
+        caller = event.widget
+        if caller.winfo_name == self.cvsFirstOp.winfo_name:
+            self.wallpaper.firstDesign = True
+        else:
+            self.wallpaper.firstDesign = False
+        self.cvsMainDisp.delete("all")
+        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour, self.cvsMainDisp)
+
+    def qualitySelect(self, selection: str) -> None:
+        self.wallpaper.quality = WallpaperQualities[((selection).upper()).strip()]
+    def additionsSelect(self) -> None:
+        if self.liningOp.get() == 0:
+            self.wallpaper.liningPaper = False
+        else: self.wallpaper.liningPaper = True
+        if self.pasteOp.get() == 0:
+            self.wallpaper.paste = False
+        else: self.wallpaper.paste = True
+    def modificationsSelect(self) -> None:
+        self.wallpaper.quality = WallpaperAdditions[self.modificationOp.get()]
+    def rollsSelect(self) -> None:
+        self.wallpaper.rolls = self.rollsOp.get()
+
+    def addClick(self) -> None:
+        self.order.append(self.wallpaper)
+
+class Draw:
+    def drawWallpaper(firstDesign: bool, canvas: Canvas, colour: str, cvsMainDisp: Canvas) -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
         if firstDesign:
             sx = (int)(cx / 5); sy = (int)(cy / 5)
@@ -171,7 +211,7 @@ class Main:
                 canvas.create_rectangle(cx - rsx - sx, 0 + rsy, cx - rsx, sy + rsy, fill=fillCol, outline=colour)
                 canvas.create_rectangle(cx - rsx - sx, cy - rsy - sy, cx - rsx, cy - rsy, fill=fillCol, outline=colour)
         else:
-            mod = canvas.winfo_width() / self.cvsMainDisp.winfo_width()
+            mod = canvas.winfo_width() / cvsMainDisp.winfo_width()
             for y in range(2):
                 startx=2; starty=(y + 1) * 40 - 15
                 for x in range(5):
@@ -191,37 +231,5 @@ class Main:
                                           fill=colour,
                                           outline=colour)
                     startx+=25
-        
-    def colourClick(self, event: Event) -> None:
-        caller = event.widget
-        self.wallpaper.colour = caller["background"]
-        self.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
-        self.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour)
-        self.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour)
-    def designClick(self, event: Event) -> None:
-        caller = event.widget
-        if caller.winfo_name == self.cvsFirstOp.winfo_name:
-            self.wallpaper.firstDesign = True
-        else:
-            self.wallpaper.firstDesign = False
-        self.cvsMainDisp.delete("all")
-        self.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
-
-    def qualitySelect(self, selection: str) -> None:
-        self.wallpaper.quality = WallpaperQualities[((selection).upper()).strip()]
-    def additionsSelect(self):
-        if self.liningOp.get() == 0:
-            self.wallpaper.liningPaper = False
-        else: self.wallpaper.liningPaper = True
-        if self.pasteOp.get() == 0:
-            self.wallpaper.paste = False
-        else: self.wallpaper.paste = True
-    def modificationsSelect(self):
-        self.wallpaper.quality = WallpaperAdditions[self.modificationOp.get()]
-    def rollsSelect(self):
-        self.wallpaper.rolls = self.rollsOp.get()
-
-    def addClick(self):
-        self.order.append(self.wallpaper)
 
 Main()
