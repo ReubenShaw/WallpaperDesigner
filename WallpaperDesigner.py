@@ -45,7 +45,7 @@ class Main:
 
         root.mainloop()
 
-        
+
     
 
 class ViewWallpaper:
@@ -123,19 +123,18 @@ class ViewWallpaper:
         xStart = 32
         lblModifications = Label(frmL, text="Modifications", bg="darkgray")
         lblModifications.config(font=tf.Font(size=12))
-        lblModifications.place(anchor=NW, x=xStart, y=self.cvsFirstOp.winfo_y()+self.cvsFirstOp.winfo_height()+128, width=self.cvsMainDisp.winfo_width()+cvsColours[0].winfo_width()+15)
+        lblModifications.place(anchor=NW, x=xStart, y=self.cvsFirstOp.winfo_y()+self.cvsFirstOp.winfo_height()+96, width=self.cvsMainDisp.winfo_width()+cvsColours[0].winfo_width()+15)
         root.update()
         frmModifications = Frame(frmL, bg="#C2C2C2")
-        frmModifications.place(anchor=NW, x=xStart, y=lblModifications.winfo_y()+lblModifications.winfo_height(), width=lblModifications.winfo_width(), height = 96)
+        frmModifications.place(anchor=NW, x=xStart, y=lblModifications.winfo_y()+lblModifications.winfo_height(), width=lblModifications.winfo_width(), height = 128)
 
         values = {"None" : "NONE",
                   "Foil" : "FOIL",
                   "Glitter" : "GLITTER",
                   "Embossing" : "EMBOSSING"}
-        rdbModifications = []
         i = 0
         for (text, value) in values.items():
-            Radiobutton(frmModifications, variable=self.modificationOp, text=text, value=value, bg=frmModifications["background"], command=self.modificationsSelect).place(anchor=NW, y=2+i*22)
+            Radiobutton(frmModifications, variable=self.modificationOp, text=text, value=value, bg=frmModifications["background"], font=tf.Font(size=12), command=self.modificationsSelect).place(anchor=NW, y=2+i*30)
             i+=1
 
         root.update()
@@ -150,14 +149,14 @@ class ViewWallpaper:
 
         btnAdd = Button(frmL, text="Add to Basket", fg="white", bg="orange", command=self.addClick)
         btnAdd.config(font=tf.Font(size=12, weight="bold"))
-        btnAdd.place(anchor=NW, x=lblRolls.winfo_x(), y=spnRolls.winfo_y()+spnRolls.winfo_height()+20, width=lblRolls.winfo_width(), height=48)
+        btnAdd.place(anchor=SW, x=lblRolls.winfo_x(), y=frmModifications.winfo_height()+frmModifications.winfo_y(), width=lblRolls.winfo_width(), height=48)
 
 
         lblTitle = Label(root, text="Design a new Wallpaper")
         lblTitle.config(font=tf.Font(size=28))
         lblTitle.place(anchor=NW, x=38, y=12)
 
-        btnOrder = Button(root, text="View Order", fg="white", bg="orange")
+        btnOrder = Button(root, text="View Order", fg="white", bg="orange", command=self.orderClick)
         btnOrder.config(font=tf.Font(size=12, weight="bold"))
         btnOrder.place(anchor=SW, x=16, y=frmL.winfo_height()-16, width=lblRolls.winfo_width(), height=48)
 
@@ -192,6 +191,46 @@ class ViewWallpaper:
 
     def addClick(self) -> None:
         self.order.append(self.wallpaper)
+        self.wallpaper = Wallpaper()
+    def orderClick(self) -> None:
+        viewOrder = ViewOrder(self.order)
+
+  
+class ViewOrder:
+    def __init__(self, order: list) -> None:
+        self.order = order
+
+        rootOrder = Toplevel()
+        rootOrder.title("Secondary Window")
+        rootOrder.config(width=960, height=540)
+        rootOrder.focus()
+        rootOrder.grab_set()
+
+
+        self.drawWindow(rootOrder)
+
+    def drawWindow(self, rootOrder: Tk) -> None:
+        
+        frmTop = Frame(rootOrder, bg="darkgray")
+        frmTop.place(x=0, y=0, relwidth=rootOrder.winfo_height(), height= 64)
+        lblTitle = Label(frmTop, text="Order", bg="darkgray")
+        lblTitle.config(font=tf.Font(size=36))
+        lblTitle.place(anchor=NW, x=16, y=0)
+        rootOrder.update()
+        cvsBack = Canvas(frmTop, bg="orange", width=32, height=32)
+        cvsBack.place(anchor=NE, x=frmTop.winfo_width()-16, y=16)
+        rootOrder.update()
+        self.drawArrow(cvsBack)
+        
+    def drawArrow(self, canvas: Canvas, colour: str = "white") -> None:
+        cx = canvas.winfo_width(); cy = canvas.winfo_height()
+        canvas.create_polygon(4, cy / 2,
+                              cx / 2, 4,
+                              cx / 2, 32,
+                              4, cy / 2, fill=colour)
+        canvas.create_rectangle(cx / 2, cy * 0.3, cx - 8, cy * 0.6, fill=colour, outline=colour)
+        
+    
 
 class Draw:
     def drawWallpaper(firstDesign: bool, canvas: Canvas, colour: str, cvsMainDisp: Canvas) -> None:
