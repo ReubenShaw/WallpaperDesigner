@@ -26,22 +26,32 @@ class Wallpaper:
         self.addition = addition
         self.liningPaper = liningPaper
         self.paste = paste
+
+    def __str__(self) -> str:
+        text = ""
+        text += f"Quality: {(str(self.quality.name)).capitalize()}"
+        if self.addition != WallpaperAdditions.NONE:
+            text += f"\nModification: {(str(self.addition.name)).capitalize()}"
+        if self.liningPaper:
+            text += "\nLining Paper"
+        if self.paste:
+            text += "\nWallpaper Paste"
+        return text
     
     def calcCost(self) -> float:
         pass
 
 
 class Main:
-    def __init__(self) -> None:
-        self.mainLoop()
-        
-    def mainLoop(self) -> None:
+    def mainLoop() -> None:
         root = Tk()
         root.geometry("960x540")
         root.title("Wallpaper Designer")
 
-        self.viewWallpaper = ViewWallpaper(root)
-        self.viewWallpaper.drawWindow(root)
+        viewWallpaper = ViewWallpaper(root)
+        viewWallpaper.drawWindow(root)
+
+        root.resizable(False, False)
 
         root.mainloop()
 
@@ -50,6 +60,8 @@ class Main:
 
 class ViewWallpaper:
     def __init__(self, root: Tk) -> None:
+        self.root = root
+        
         self.availableColours = ["purple", "DarkSlateGray4", "deep sky blue", "light sea green", "VioletRed2", "gold"]
         self.wallpaper = Wallpaper()
         self.order = []
@@ -73,7 +85,7 @@ class ViewWallpaper:
         self.cvsMainDisp = Canvas(frmL, width=126, height=126, bg="white")
         self.cvsMainDisp.place(anchor=NW, x=xStart, y=yStart)
         root.update()
-        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour, self.cvsMainDisp)
+        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
 
         self.cvsFirstOp = Canvas(frmL, width=56, height=56, bg=self.cvsMainDisp["background"])
         self.cvsFirstOp.bind("<Button-1>", self.designClick)
@@ -84,8 +96,8 @@ class ViewWallpaper:
         self.cvsSecondOp.place(anchor=NW, x=self.cvsFirstOp.winfo_width()+xStart+15, y=self.cvsMainDisp.winfo_height()+yStart+15)
         root.update()
 
-        Draw.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour, self.cvsMainDisp)
-        Draw.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour, self.cvsMainDisp)
+        Draw.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour)
+        Draw.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour)
 
 
         cvsColours = []
@@ -163,9 +175,9 @@ class ViewWallpaper:
     def colourClick(self, event: Event) -> None:
         caller = event.widget
         self.wallpaper.colour = caller["background"]
-        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour, self.cvsMainDisp)
-        Draw.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour, self.cvsMainDisp)
-        Draw.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour, self.cvsMainDisp)
+        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
+        Draw.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour)
+        Draw.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour)
     def designClick(self, event: Event) -> None:
         caller = event.widget
         if caller.winfo_name == self.cvsFirstOp.winfo_name:
@@ -173,7 +185,7 @@ class ViewWallpaper:
         else:
             self.wallpaper.firstDesign = False
         self.cvsMainDisp.delete("all")
-        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour, self.cvsMainDisp)
+        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
 
     def qualitySelect(self, selection: str) -> None:
         self.wallpaper.quality = WallpaperQualities[((selection).upper()).strip()]
@@ -193,47 +205,112 @@ class ViewWallpaper:
         self.order.append(self.wallpaper)
         self.wallpaper = Wallpaper()
     def orderClick(self) -> None:
-        viewOrder = ViewOrder(self.order)
+        viewOrder = ViewOrder(self.order, self.root)
+
 
   
 class ViewOrder:
-    def __init__(self, order: list) -> None:
+    def __init__(self, order: list, root: Tk) -> None:
+        self.originalRoot = root
+        root.withdraw()
+
         self.order = order
+        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE))
+        order.append(Wallpaper(False, "gold", liningPaper=True))
+        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE))
+        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
+        order.append(Wallpaper(paste=True, colour="VioletRed2"))
+        order.append(Wallpaper(False, "gold", liningPaper=True))
+        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE))
+        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE))
+        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
+        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE))
+        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE))
+        order.append(Wallpaper(False, "gold", liningPaper=True))
+        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
+        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE))
+
+        self.frmOrdBack = []
+        self.cvsOrd = []
+        self.lblOrdDet = []
 
         rootOrder = Toplevel()
         rootOrder.title("Secondary Window")
         rootOrder.config(width=960, height=540)
         rootOrder.focus()
         rootOrder.grab_set()
+        rootOrder.resizable(False, False)
+
+        self.rootOrder = rootOrder
 
 
         self.drawWindow(rootOrder)
 
     def drawWindow(self, rootOrder: Tk) -> None:
+        rootOrder.update()
+        self.canvas = Canvas(rootOrder)
+        self.canvas.place(relx=0, rely=0, relheight=1, relwidth=1)
+
+        backFrame = Frame(self.canvas, width=rootOrder.winfo_width(), height=len(self.order)*115+80)
+        # resize the canvas scrollregion each time the size of the frame changes
+        backFrame.bind('<Configure>', self.on_configure)
+        # display frame inside the canvas
+        self.canvas.create_window(0, 0, window=backFrame)
+
+        scrolly = Scrollbar(rootOrder, command=self.canvas.yview)
+        scrolly.place(relx=1, y=80, relheight=0.85, anchor='ne')
+        self.canvas.configure(yscrollcommand=scrolly.set)
+        rootOrder.update()
         
+        for i in range(len(self.order)):
+            self.frmOrdBack.append(Frame(backFrame, background="#C2C2C2", highlightbackground="black", highlightthickness=2))
+            self.cvsOrd.append(Canvas(self.frmOrdBack[i], bg="white"))
+            self.lblOrdDet.append(Label(self.frmOrdBack[i], bg="#C2C2C2", text=str(self.order[i]), font=tf.Font(size=16), justify=LEFT))
+        self.orderListDisp(rootOrder)
+
+        rootOrder.update()
+
         frmTop = Frame(rootOrder, bg="darkgray")
-        frmTop.place(x=0, y=0, relwidth=rootOrder.winfo_height(), height= 64)
+        frmTop.place(x=0, y=0, relwidth=rootOrder.winfo_height(), height=80)
         lblTitle = Label(frmTop, text="Order", bg="darkgray")
         lblTitle.config(font=tf.Font(size=36))
-        lblTitle.place(anchor=NW, x=16, y=0)
+        lblTitle.place(anchor=NW, x=16, y=10)
         rootOrder.update()
+
         cvsBack = Canvas(frmTop, bg="orange", width=32, height=32)
-        cvsBack.place(anchor=NE, x=frmTop.winfo_width()-16, y=16)
+        cvsBack.bind("<Button-1>", self.backClick)
+        cvsBack.place(anchor=NE, x=frmTop.winfo_width()-16, y=20)
         rootOrder.update()
-        self.drawArrow(cvsBack)
-        
-    def drawArrow(self, canvas: Canvas, colour: str = "white") -> None:
-        cx = canvas.winfo_width(); cy = canvas.winfo_height()
-        canvas.create_polygon(4, cy / 2,
-                              cx / 2, 4,
-                              cx / 2, 32,
-                              4, cy / 2, fill=colour)
-        canvas.create_rectangle(cx / 2, cy * 0.3, cx - 8, cy * 0.6, fill=colour, outline=colour)
+        # Draw.drawArrow(cvsBack)
+
+    def on_configure(self, event):
+        # update scrollregion after starting 'mainloop'
+        # when all widgets are in canvas
+        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+
+    def orderListDisp(self, rootOrder: Tk) -> None:
+        for i in range(len(self.order)):
+            print(f"{i}")
+            self.frmOrdBack[i].place(x=0, y=80+i*115, width=720, height=115)
+            self.cvsOrd[i].place(x=25, y=25, width=63, height=63)
+            self.lblOrdDet[i].place(x=145, y=4)
+        for i in range(len(self.order)):
+            Draw.drawWallpaper(self.order[i].firstDesign, self.cvsOrd[i], self.order[i].colour)
+
+    def scrollbarAction(self) -> None:
+        pass
+
+    def backClick(self, event: Event):
+        self.originalRoot.iconify()
+        self.originalRoot.deiconify()
+        self.rootOrder.destroy()
+
+            
         
     
 
 class Draw:
-    def drawWallpaper(firstDesign: bool, canvas: Canvas, colour: str, cvsMainDisp: Canvas) -> None:
+    def drawWallpaper(firstDesign: bool, canvas: Canvas, colour: str) -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
         if firstDesign:
             sx = (int)(cx / 5); sy = (int)(cy / 5)
@@ -250,7 +327,7 @@ class Draw:
                 canvas.create_rectangle(cx - rsx - sx, 0 + rsy, cx - rsx, sy + rsy, fill=fillCol, outline=colour)
                 canvas.create_rectangle(cx - rsx - sx, cy - rsy - sy, cx - rsx, cy - rsy, fill=fillCol, outline=colour)
         else:
-            mod = canvas.winfo_width() / cvsMainDisp.winfo_width()
+            mod = canvas.winfo_width() / 126
             for y in range(2):
                 startx=2; starty=(y + 1) * 40 - 15
                 for x in range(5):
@@ -271,4 +348,12 @@ class Draw:
                                           outline=colour)
                     startx+=25
 
-Main()
+    def drawArrow(canvas: Canvas, colour: str = "white") -> None:
+        cx = canvas.winfo_width(); cy = canvas.winfo_height()
+        canvas.create_polygon(4, cy / 2,
+                              cx / 2, 4,
+                              cx / 2, 32,
+                              4, cy / 2, fill=colour)
+        canvas.create_rectangle(cx / 2, cy * 0.3, cx - 8, cy * 0.6, fill=colour, outline=colour)
+
+Main.mainLoop()
