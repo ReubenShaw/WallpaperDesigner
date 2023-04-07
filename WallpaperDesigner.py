@@ -249,13 +249,13 @@ class ViewOrder:
     def drawWindow(self, rootOrder: Tk) -> None:
         rootOrder.update()
         self.canvas = Canvas(rootOrder)
-        self.canvas.place(relx=0, rely=0, relheight=1, relwidth=1)
+        self.canvas.place(x=0, y=0, relheight=1, relwidth=1)
 
         backFrame = Frame(self.canvas, width=rootOrder.winfo_width(), height=len(self.order)*115+80)
         # resize the canvas scrollregion each time the size of the frame changes
         backFrame.bind('<Configure>', self.on_configure)
         # display frame inside the canvas
-        self.canvas.create_window(0, 0, window=backFrame)
+        self.canvas.create_window(0, 80, window=backFrame)
 
         scrolly = Scrollbar(rootOrder, command=self.canvas.yview)
         scrolly.place(relx=1, y=80, relheight=0.85, anchor='ne')
@@ -269,9 +269,9 @@ class ViewOrder:
         self.orderListDisp(rootOrder)
 
         rootOrder.update()
-
+        
         frmTop = Frame(rootOrder, bg="darkgray")
-        frmTop.place(x=0, y=0, relwidth=rootOrder.winfo_height(), height=80)
+        frmTop.place(x=0, y=0, relwidth=rootOrder.winfo_height(), height=82)
         lblTitle = Label(frmTop, text="Order", bg="darkgray")
         lblTitle.config(font=tf.Font(size=36))
         lblTitle.place(anchor=NW, x=16, y=10)
@@ -284,21 +284,19 @@ class ViewOrder:
         # Draw.drawArrow(cvsBack)
 
     def on_configure(self, event):
-        # update scrollregion after starting 'mainloop'
-        # when all widgets are in canvas
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+        if len(self.cvsOrd) > 0:
+            for i in range(len(self.order)):
+                Draw.drawWallpaper(self.order[i].firstDesign, self.cvsOrd[i], self.order[i].colour)
 
     def orderListDisp(self, rootOrder: Tk) -> None:
         for i in range(len(self.order)):
-            print(f"{i}")
-            self.frmOrdBack[i].place(x=0, y=80+i*115, width=720, height=115)
+            self.frmOrdBack[i].place(x=1, y=80+i*115, width=720, height=115)
             self.cvsOrd[i].place(x=25, y=25, width=63, height=63)
             self.lblOrdDet[i].place(x=145, y=4)
         for i in range(len(self.order)):
             Draw.drawWallpaper(self.order[i].firstDesign, self.cvsOrd[i], self.order[i].colour)
 
-    def scrollbarAction(self) -> None:
-        pass
 
     def backClick(self, event: Event):
         self.originalRoot.iconify()
