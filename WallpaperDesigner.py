@@ -1,6 +1,7 @@
 from enum import Enum
 from tkinter import *
 import tkinter.font as tf
+from copy import copy
 
 class WallpaperQualities(Enum): #REDO, PRICES WRONG
     CHEAP = 0.03
@@ -274,8 +275,8 @@ class ViewOrder:
             self.cvsOrd.append(Canvas(self.frmOrdBack[i], bg="white"))
             self.lblOrdDet.append(Label(self.frmOrdBack[i], bg="#C2C2C2", text=str(self.order[i]), font=tf.Font(size=16), justify=LEFT))
             self.rollsOp.append(StringVar(rootOrder, value=self.order[i].rolls))
-            self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=50, textvariable=self.rollsOp[i], font=tf.Font(size=14), name=str(i)))
-            self.spnRolls[i].bind("<Button-1>", self.rollsSelect)
+            self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=50, textvariable=self.rollsOp[i], font=tf.Font(size=14)))
+            
         self.orderListDisp(rootOrder)
         Frame(backFrame, background="black").place(x=117, rely=0, width=4, relheight=1)
         Frame(backFrame, background="black").place(x=480, rely=0, width=4, relheight=1)
@@ -308,15 +309,15 @@ class ViewOrder:
             self.frmOrdBack[i].place(x=1, y=80+i*115)
             self.cvsOrd[i].place(x=25, y=25, width=63, height=63)
             self.lblOrdDet[i].place(x=145, y=4)
+            self.spnRolls[i].config(command=lambda i=i: self.rollsSelect(i))
             self.spnRolls[i].place(anchor=NW, x=528, y=42, width=128)
         rootOrder.update()
         for i in range(len(self.order)):
             Draw.drawWallpaper(self.order[i].firstDesign, self.cvsOrd[i], self.order[i].colour)
 
-    def rollsSelect(self, event: Event) -> None:
-        caller = event.widget
-        i = int(caller.winfo_name())
-        if int(self.rollsOp[i].get()) == 1:
+    def rollsSelect(self, i) -> None:
+        print(f"{i}")
+        if int(self.rollsOp[i].get()) == 0:
             del self.frmOrdBack[i]
             del self.cvsOrd[i]
             del self.lblOrdDet[i]
