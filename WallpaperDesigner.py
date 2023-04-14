@@ -17,7 +17,8 @@ class Windows(Enum):
     VIEW_ORDER = 1
 
 class Wallpaper:
-    def __init__(self, firstDesign = True, colour: str = "purple", rolls: int = 0, quality: WallpaperQualities = WallpaperQualities.CHEAP, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
+    def __init__(self, firstDesign = True, colour: str = "purple", rolls: int = 1, quality: WallpaperQualities = WallpaperQualities.CHEAP, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
+        """Whilst the constructor does allow custom values, this is purely for testing purposes and instead wallpapers are all initially initiated with default attributes"""
         self.firstDesign = firstDesign
         self.colour = colour
         self.rolls = rolls
@@ -28,6 +29,7 @@ class Wallpaper:
         self.paste = paste
 
     def __str__(self) -> str:
+        """Overridden for the display of the wallpaper's data in the view order page's labels"""
         text = ""
         text += f"Quality: {(str(self.quality.name)).capitalize()}"
         if self.addition != WallpaperAdditions.NONE:
@@ -43,6 +45,7 @@ class Wallpaper:
 
 
 class Main:
+    """Main class used to initiate the first page and control the mainloop, primary root is also created"""
     def mainLoop() -> None:
         root = Tk()
         root.geometry("960x540")
@@ -60,6 +63,7 @@ class Main:
 
 class ViewWallpaper:
     def __init__(self, root: Tk) -> None:
+        """First window, stored in the Main class and contains the second window within itself"""
         self.root = root
         
         self.availableColours = ["purple", "DarkSlateGray4", "deep sky blue", "light sea green", "VioletRed2", "gold"]
@@ -205,7 +209,7 @@ class ViewWallpaper:
         self.order.append(self.wallpaper)
         self.wallpaper = Wallpaper()
     def orderClick(self) -> None:
-        viewOrder = ViewOrder(self.order, self.root)
+        ViewOrder(self.order, self.root)
 
 
   
@@ -215,24 +219,21 @@ class ViewOrder:
         root.withdraw()
 
         self.order = order
-        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE))
+        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE, rolls=28))
+        order.append(Wallpaper(False, "gold", liningPaper=True, rolls=17))
+        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE, rolls=19))
+        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=23))
+        order.append(Wallpaper(paste=True, colour="VioletRed2", rolls=8))
+        order.append(Wallpaper(False, "gold", liningPaper=True, rolls=1))
+        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE, rolls=18))
+        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE, rolls=25))
+        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=3))
+        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE, rolls=2))
+        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE, rolls=15))
         order.append(Wallpaper(False, "gold", liningPaper=True))
-        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE))
         order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
-        order.append(Wallpaper(paste=True, colour="VioletRed2"))
-        order.append(Wallpaper(False, "gold", liningPaper=True))
-        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE))
-        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE))
-        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
-        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE))
-        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE))
-        order.append(Wallpaper(False, "gold", liningPaper=True))
-        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
-        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE))
+        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE, rolls=5))
 
-        self.frmOrdBack = []
-        self.cvsOrd = []
-        self.lblOrdDet = []
 
         rootOrder = Toplevel()
         rootOrder.title("Secondary Window")
@@ -240,33 +241,45 @@ class ViewOrder:
         rootOrder.focus()
         rootOrder.grab_set()
         rootOrder.resizable(False, False)
+        rootOrder.protocol('WM_DELETE_WINDOW', self.rootOrderClose)
 
         self.rootOrder = rootOrder
 
+        self.barMain = Scrollbar()
+        self.cvsHidden = Canvas(rootOrder)
+
+        self.frmOrdBack = []
+        self.cvsOrd = []
+        self.lblOrdDet = []
+        self.spnRolls = []
+        self.rollsOp = []
 
         self.drawWindow(rootOrder)
 
     def drawWindow(self, rootOrder: Tk) -> None:
         rootOrder.update()
-        self.canvas = Canvas(rootOrder)
-        self.canvas.place(x=0, y=0, relheight=1, relwidth=1)
+        self.cvsHidden.place(x=0, y=0, relheight=1, relwidth=1)
 
-        backFrame = Frame(self.canvas, width=rootOrder.winfo_width(), height=len(self.order)*115+80)
-        # resize the canvas scrollregion each time the size of the frame changes
+        backFrame = Frame(self.cvsHidden, width=rootOrder.winfo_width(), height=len(self.order)*115+80)
         backFrame.bind('<Configure>', self.on_configure)
-        # display frame inside the canvas
-        self.canvas.create_window(0, 80, window=backFrame)
+        self.cvsHidden.create_window(0, 80, window=backFrame)
 
-        scrolly = Scrollbar(rootOrder, command=self.canvas.yview)
-        scrolly.place(relx=1, y=80, relheight=0.85, anchor='ne')
-        self.canvas.configure(yscrollcommand=scrolly.set)
+        self.barMain = Scrollbar(rootOrder, command=self.cvsHidden.yview)
+        self.barMain.place(x=720, y=80, relheight=0.85)
+        self.cvsHidden.configure(yscrollcommand=self.barMain.set)
         rootOrder.update()
         
         for i in range(len(self.order)):
-            self.frmOrdBack.append(Frame(backFrame, background="#C2C2C2", highlightbackground="black", highlightthickness=2))
+            self.frmOrdBack.append(Frame(backFrame, background="#C2C2C2", highlightbackground="black", highlightthickness=2, width=720, height=115))
             self.cvsOrd.append(Canvas(self.frmOrdBack[i], bg="white"))
             self.lblOrdDet.append(Label(self.frmOrdBack[i], bg="#C2C2C2", text=str(self.order[i]), font=tf.Font(size=16), justify=LEFT))
+            self.rollsOp.append(StringVar(rootOrder, value=self.order[i].rolls))
+            self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=50, textvariable=self.rollsOp[i], font=tf.Font(size=14), name=str(i)))
+            self.spnRolls[i].bind("<Button-1>", self.rollsSelect)
         self.orderListDisp(rootOrder)
+        Frame(backFrame, background="black").place(x=117, rely=0, width=4, relheight=1)
+        Frame(backFrame, background="black").place(x=480, rely=0, width=4, relheight=1)
+
 
         rootOrder.update()
         
@@ -281,31 +294,47 @@ class ViewOrder:
         cvsBack.bind("<Button-1>", self.backClick)
         cvsBack.place(anchor=NE, x=frmTop.winfo_width()-16, y=20)
         rootOrder.update()
-        # Draw.drawArrow(cvsBack)
 
-    def on_configure(self, event):
-        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
-        if len(self.cvsOrd) > 0:
-            for i in range(len(self.order)):
-                Draw.drawWallpaper(self.order[i].firstDesign, self.cvsOrd[i], self.order[i].colour)
+
+        self.cvsHidden.yview_moveto(0)
+        Draw.drawArrow(cvsBack)
+
+    def on_configure(self, event: Event) -> None:
+        self.cvsHidden.configure(scrollregion=self.cvsHidden.bbox('all'))
+       
 
     def orderListDisp(self, rootOrder: Tk) -> None:
         for i in range(len(self.order)):
-            self.frmOrdBack[i].place(x=1, y=80+i*115, width=720, height=115)
+            self.frmOrdBack[i].place(x=1, y=80+i*115)
             self.cvsOrd[i].place(x=25, y=25, width=63, height=63)
             self.lblOrdDet[i].place(x=145, y=4)
+            self.spnRolls[i].place(anchor=NW, x=528, y=42, width=128)
+        rootOrder.update()
         for i in range(len(self.order)):
             Draw.drawWallpaper(self.order[i].firstDesign, self.cvsOrd[i], self.order[i].colour)
 
+    def rollsSelect(self, event: Event) -> None:
+        caller = event.widget
+        i = int(caller.winfo_name())
+        if int(self.rollsOp[i].get()) == 1:
+            del self.frmOrdBack[i]
+            del self.cvsOrd[i]
+            del self.lblOrdDet[i]
+            del self.spnRolls[i]
 
-    def backClick(self, event: Event):
+            del self.rollsOp[i]
+            del self.order[i]
+            self.orderListDisp(self.rootOrder)
+
+
+    def backClick(self, event: Event) -> None:
         self.originalRoot.iconify()
         self.originalRoot.deiconify()
         self.rootOrder.destroy()
 
-            
-        
-    
+    def rootOrderClose(self) -> None:
+        self.rootOrder.quit()
+
 
 class Draw:
     def drawWallpaper(firstDesign: bool, canvas: Canvas, colour: str) -> None:
