@@ -5,7 +5,7 @@ import tkinter.font as tf
 import math
 import re
 
-class WallpaperQualities(Enum): #REDO, PRICES WRONG
+class WallpaperQualities(Enum):
     CHEAP = 0.003
     EXPENSIVE = 0.006
 
@@ -14,10 +14,6 @@ class WallpaperAdditions(Enum):
     EMBOSSING = 0.06
     FOIL = 0.12
     GLITTER = 0.18
-
-class Windows(Enum):
-    VIEW_WALLPAPER = 0
-    VIEW_ORDER = 1
 
 class Wallpaper:
     def __init__(self, quality: WallpaperQualities = WallpaperQualities.CHEAP, colour: str = "purple", rolls: int = 1, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
@@ -70,20 +66,20 @@ class Main:
     """Main class used to initiate the first page and control the mainloop"""
     def mainLoop() -> None:
         order = []
-        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=28))
-        order.append(Wallpaper(colour="gold", liningPaper=True, rolls=17))
-        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=19))
-        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=23))
-        order.append(Wallpaper(paste=True, colour="VioletRed2", rolls=8))
-        order.append(Wallpaper(colour="gold", liningPaper=True, rolls=1))
-        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=18))
-        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=25))
-        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=3))
-        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=2))
-        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=15))
-        order.append(Wallpaper(colour="gold", liningPaper=True))
-        order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
-        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=5))
+        # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=28))
+        # order.append(Wallpaper(colour="gold", liningPaper=True, rolls=17))
+        # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=19))
+        # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=23))
+        # order.append(Wallpaper(paste=True, colour="VioletRed2", rolls=8))
+        # order.append(Wallpaper(colour="gold", liningPaper=True, rolls=1))
+        # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=18))
+        # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=25))
+        # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=3))
+        # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=2))
+        # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=15))
+        # order.append(Wallpaper(colour="gold", liningPaper=True))
+        # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
+        # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=5))
         mainWin = ViewWallpaper(order=order)
         
         mainWin.root.mainloop()
@@ -142,7 +138,7 @@ class ViewWallpaper():
         root.update()
         self.cvsSecondOp = Canvas(frmL, width=56, height=56, bg=self.cvsMainDisp["background"])
         self.cvsSecondOp.bind("<Button-1>", self.designClick)
-        self.cvsSecondOp.place(anchor=NW, x=self.cvsFirstOp.winfo_width()+xStart+15, y=self.cvsMainDisp.winfo_height()+yStart+15)
+        self.cvsSecondOp.place(anchor=NE, x=self.cvsMainDisp.winfo_x()+self.cvsMainDisp.winfo_width(), y=self.cvsMainDisp.winfo_height()+yStart+15)
         root.update()
 
         Draw.drawWallpaper(WallpaperQualities.CHEAP, self.cvsFirstOp, self.wallpaper.colour)
@@ -202,12 +198,12 @@ class ViewWallpaper():
         root.update()
         
         callback = root.register(self.metreValidate)
-        self.txtMetres = Entry(frmL, font=tf.Font(size=10), validate="key", validatecommand=(callback, '%S'), textvariable=self.metresVar)
+        self.txtMetres = Entry(frmL, font=tf.Font(size=12), validate="key", validatecommand=(callback, '%S'), textvariable=self.metresVar)
         self.txtMetres.bind("<KeyRelease>", self.metreKeyPress)
         self.txtMetres.place(anchor=NW, x=lblMetres.winfo_x(), y=lblMetres.winfo_y()+lblMetres.winfo_height(), width=lblMetres.winfo_width(), height=20)
 
         root.update()
-        self.lblRolls = Label(frmL, text=f"Rolls: {self.wallpaper.rolls}", bg=frmL["background"], font=tf.Font(size=12))
+        self.lblRolls = Label(frmL, text=f"Rolls: {self.wallpaper.rolls}", bg=frmL["background"], font=tf.Font(size=10))
         self.lblRolls.place(x=self.txtMetres.winfo_x(), y=self.txtMetres.winfo_y()+self.txtMetres.winfo_height())
 
         btnAdd = Button(frmL, fg="white", bg="orange", command=self.addClick, font=tf.Font(size=12, weight="bold"))
@@ -245,6 +241,7 @@ class ViewWallpaper():
         Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour)
         Draw.drawWallpaper(WallpaperQualities.CHEAP, self.cvsFirstOp, self.wallpaper.colour)
         Draw.drawWallpaper(WallpaperQualities.EXPENSIVE, self.cvsSecondOp, self.wallpaper.colour)
+    
     def designClick(self, event: Event) -> None:
         caller = event.widget
         if caller.winfo_name == self.cvsFirstOp.winfo_name:
@@ -273,6 +270,7 @@ class ViewWallpaper():
         if input.isdigit() or input == "" or input == ".":
             return True
         return False
+    
     def metreKeyPress(self, event: Event) -> None:
         if IsNumber.check(self.txtMetres.get()):
             self.wallpaper.rolls = math.ceil(float(self.txtMetres.get()) / 10.05)
@@ -291,6 +289,7 @@ class ViewWallpaper():
             self.lblTotalCost.config(text=f"Order Cost: £{Cost.calcOrderCost(self.order)}")
             self.wallpaper = Wallpaper()
             self.reset()
+
     def orderClick(self) -> None:
         self.reset()
         ViewOrder(self.order, self.root)
@@ -320,7 +319,7 @@ class ViewWallpaper():
         self.root.quit()
 
 
-  
+
 class ViewOrder:
     def __init__(self, order: list, root: Tk) -> None:
         self.originalRoot = root
@@ -342,7 +341,7 @@ class ViewOrder:
         self.cvsHidden = Canvas(rootOrder)
         self.backFrame = Frame()
 
-        self.lblCost = Label()
+        self.lblTotalCost = Label()
 
         self.frmOrdBack = []
         self.cvsOrd = []
@@ -350,6 +349,7 @@ class ViewOrder:
         self.btnEdit = []
         self.spnRolls = []
         self.rollsOp = []
+        self.lblCost = []
 
         self.drawWindow(rootOrder)
 
@@ -377,6 +377,8 @@ class ViewOrder:
             self.btnEdit.append(Button(self.frmOrdBack[i], bg="#C2C2C2", text="Edit"))
             self.rollsOp.append(StringVar(rootOrder, value=self.order[i].rolls))
             self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=1000, textvariable=self.rollsOp[i], font=tf.Font(size=14), state="readonly"))
+            cost = format(self.order[i].calcCost(), ",.2f")
+            self.lblCost.append(Label(self.frmOrdBack[i], text=f"Cost: £{cost}", bg="#C2C2C2", font=tf.Font(size=12)))
 
         self.orderListDisp(rootOrder)
         Frame(self.backFrame, background="black").place(x=117, rely=0, width=4, relheight=1)
@@ -392,12 +394,12 @@ class ViewOrder:
         lblTitle.place(anchor=NW, x=16, y=10)
         rootOrder.update()
 
-        self.lblCost = Label(rootOrder, text=f"Total Order Cost:\n£{Cost.calcOrderCost(self.order)}", bg="darkgray", font=tf.Font(size=18))
-        self.lblCost.place(x=barBack.winfo_x()+barBack.winfo_width(), y=frmTop.winfo_height(), width=rootOrder.winfo_width()-(barBack.winfo_x()+barBack.winfo_width()), height=128)
+        self.lblTotalCost = Label(rootOrder, text=f"Total Order Cost:\n£{Cost.calcOrderCost(self.order)}", bg="darkgray", font=tf.Font(size=18))
+        self.lblTotalCost.place(x=barBack.winfo_x()+barBack.winfo_width(), y=frmTop.winfo_height(), width=rootOrder.winfo_width()-(barBack.winfo_x()+barBack.winfo_width()), height=128)
         rootOrder.update()
 
         btnPrint = Button(rootOrder, text="Print Order", bg="orange", fg="white", font=tf.Font(size=12, weight="bold"), command=self.printOrder)
-        btnPrint.place(anchor=SW, x=self.lblCost.winfo_x()+38, y=rootOrder.winfo_height()-16, width=148, height=56)
+        btnPrint.place(anchor=SW, x=self.lblTotalCost.winfo_x()+38, y=rootOrder.winfo_height()-16, width=148, height=56)
 
         cvsBack = Canvas(frmTop, bg="orange", width=32, height=32)
         cvsBack.bind("<Button-1>", self.backClick)
@@ -419,7 +421,10 @@ class ViewOrder:
             self.btnEdit[i].config(command=lambda i=i: self.editClick(i))
             self.btnEdit[i].place(anchor=NE, x=464, y=67, width=32, height=32)
             self.spnRolls[i].config(command=lambda i=i: self.rollsSelect(i))
-            self.spnRolls[i].place(anchor=NW, x=528, y=42, width=128)
+            self.spnRolls[i].place(anchor=NW, x=528, y=30, width=128)
+            rootOrder.update()
+            Label(self.frmOrdBack[i], text="Rolls:", font=tf.Font(size=12), fg="black", bg=self.frmOrdBack[i]["background"]).place(anchor=SW, x=self.spnRolls[i].winfo_x()-2, y=self.spnRolls[i].winfo_y()-2, width=self.spnRolls[i].winfo_width())
+            self.lblCost[i].place(anchor=NW, x=self.spnRolls[i].winfo_x()-2, y=72, width=self.spnRolls[i].winfo_width())
             self.backFrame.config(height=len(self.order)*115+80)
         rootOrder.update()
         for i in range(len(self.order)):
@@ -435,6 +440,8 @@ class ViewOrder:
         f.write(text)
         f.close
 
+        messagebox.showinfo("Success", "Successfully printed to file!")
+
     def rollsSelect(self, i) -> None:
         if int(self.rollsOp[i].get()) == 0:
             self.frmOrdBack[i].destroy()
@@ -443,19 +450,25 @@ class ViewOrder:
             del self.lblOrdDet[i]
             del self.btnEdit[i]
             del self.spnRolls[i]
+            del self.lblCost[i]
 
             del self.rollsOp[i]
             del self.order[i]
             self.orderListDisp(self.rootOrder)
+
+            if len(self.order) < 4:
+                self.cvsHidden.yview_moveto(0)
         else:
             self.order[i].rolls = int(self.rollsOp[i].get())
 
-        self.lblCost.config(text=f"Total Order Cost:\n£{Cost.calcOrderCost(self.order)}")
+        for i in range(len(self.order)):
+            cost = format(self.order[i].calcCost(), ",.2f")
+            self.lblCost[i].config(text=f"Cost: £{cost}")
+        self.lblTotalCost.config(text=f"Total Order Cost:\n£{Cost.calcOrderCost(self.order)}")
 
     def editClick(self, i) -> None:
         self.rootOrder.destroy()
         ViewWallpaper(Tk(), self.order[i], self.order, i)
-
 
     def backClick(self, event: Event) -> None:
         self.originalRoot.iconify()
