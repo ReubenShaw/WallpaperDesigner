@@ -2,6 +2,7 @@ from enum import Enum
 from tkinter import *
 import tkinter.font as tf
 import math
+import re
 
 class WallpaperQualities(Enum): #REDO, PRICES WRONG
     CHEAP = 0.003
@@ -48,18 +49,19 @@ class Wallpaper:
         totalArea = width * height * self.rolls
 
         cost = 0
-        cost += self.quality.value * totalArea
-        cost += self.addition.value * totalHeight
+        if self.rolls > 0:
+            cost += self.quality.value * totalArea * 10000
+            cost += self.addition.value * totalHeight
 
-        if self.liningPaper and self.paste:
-            cost += math.ceil(totalArea / 20) * 7.63
-            cost += math.ceil(totalArea / 53) * 13.99 * 2
-        elif self.liningPaper:
-            cost += math.ceil(totalArea / 20) * 7.63
-        elif self.paste:
-            cost += math.ceil(totalArea / 53) * 13.99
+            if self.liningPaper and self.paste:
+                cost += math.ceil(totalArea / 20) * 7.63
+                cost += math.ceil(totalArea / 53) * 13.99 * 2
+            elif self.liningPaper:
+                cost += math.ceil(totalArea / 20) * 7.63
+            elif self.paste:
+                cost += math.ceil(totalArea / 53) * 13.99
 
-        return cost
+        return round(cost, 2)
 
 
 class Main:
@@ -107,11 +109,13 @@ class ViewWallpaper():
         self.liningOp = IntVar(value=int(wallpaper.liningPaper))
         self.pasteOp = IntVar(value=int(wallpaper.paste))
         self.modificationOp = StringVar(self.root, str(wallpaper.addition.name))
-        self.rollsOp = StringVar(self.root, value=wallpaper.rolls)
+        self.metresVar = StringVar(root, format(round(self.wallpaper.rolls * 10.05, 2), ",.2f"))
 
         self.cvsMainDisp = Canvas()
         self.cvsFirstOp = Canvas()
         self.cvsSecondOp = Canvas()
+
+        self.txtMetres = Entry()
 
         self.lblQuality = Label()
         self.lblCost = Label()
@@ -176,7 +180,7 @@ class ViewWallpaper():
         xStart = 32
         lblModifications = Label(frmL, text="Modifications", bg="darkgray")
         lblModifications.config(font=tf.Font(size=12))
-        lblModifications.place(anchor=NW, x=xStart, y=self.cvsFirstOp.winfo_y()+self.cvsFirstOp.winfo_height()+96, width=self.cvsMainDisp.winfo_width()+cvsColours[0].winfo_width()+15)
+        lblModifications.place(anchor=NW, x=xStart, y=self.cvsFirstOp.winfo_y()+self.cvsFirstOp.winfo_height()+128, width=self.cvsMainDisp.winfo_width()+cvsColours[0].winfo_width()+15)
         root.update()
         frmModifications = Frame(frmL, bg="#C2C2C2")
         frmModifications.place(anchor=NW, x=xStart, y=lblModifications.winfo_y()+lblModifications.winfo_height(), width=lblModifications.winfo_width(), height = 128)
@@ -191,14 +195,18 @@ class ViewWallpaper():
             i+=1
 
         root.update()
-        lblRolls = Label(frmL, text="Rolls", bg=frmL["background"])
-        lblRolls.config(font=tf.Font(size=12))
-        lblRolls.place(anchor=NW, x=lblAdditions.winfo_x(), y=lblModifications.winfo_y(), width=frmAdditions.winfo_width())
+        lblMetres = Label(frmL, text="Metres of Wallpaper", bg=frmL["background"], font=tf.Font(size=12))
+        lblMetres.place(anchor=NW, x=lblAdditions.winfo_x(), y=lblModifications.winfo_y(), width=frmAdditions.winfo_width())
         root.update()
-        spnRolls = Spinbox(frmL, from_=1, to=50, textvariable=self.rollsOp, command=self.rollsSelect)
-        spnRolls.config(font=tf.Font(size=14))
-        spnRolls.place(anchor=NW, x=lblRolls.winfo_x(), y=lblRolls.winfo_y()+lblRolls.winfo_height(), width=lblRolls.winfo_width())
+        
+        callback = root.register(self.metreValidate)
+        self.txtMetres = Entry(frmL, font=tf.Font(size=10), validate="key", validatecommand=(callback, '%S'), textvariable=self.metresVar)
+        self.txtMetres.bind("<KeyRelease>", self.metreKeyPress)
+        self.txtMetres.place(anchor=NW, x=lblMetres.winfo_x(), y=lblMetres.winfo_y()+lblMetres.winfo_height(), width=lblMetres.winfo_width(), height=20)
+
         root.update()
+        self.lblRolls = Label(frmL, text=f"Rolls: {self.wallpaper.rolls}", bg=frmL["background"], font=tf.Font(size=12))
+        self.lblRolls.place(x=self.txtMetres.winfo_x(), y=self.txtMetres.winfo_y()+self.txtMetres.winfo_height())
 
         btnAdd = Button(frmL, fg="white", bg="orange", command=self.addClick)
         btnAdd.config(font=tf.Font(size=12, weight="bold"))
@@ -206,7 +214,12 @@ class ViewWallpaper():
             btnAdd.config(text="Modiy Wallpaper")
         else:
             btnAdd.config(text="Add to Basket")
-        btnAdd.place(anchor=SW, x=lblRolls.winfo_x(), y=frmModifications.winfo_height()+frmModifications.winfo_y(), width=lblRolls.winfo_width(), height=48)
+        btnAdd.place(anchor=SW, x=lblMetres.winfo_x(), y=frmModifications.winfo_height()+frmModifications.winfo_y(), width=lblMetres.winfo_width(), height=48)
+        root.update()
+        self.lblCost = Label(frmL, bg=frmL["background"], font=tf.Font(size=12))
+        self.lblCost.place(x=btnAdd.winfo_x(), y=btnAdd.winfo_y()-24)
+        self.calcCost()
+        
 
 
         lblTitle = Label(root, text="Design a new Wallpaper")
@@ -219,7 +232,12 @@ class ViewWallpaper():
             btnOrder.config(text="Return to Order")
         else:
             btnOrder.config(text="View Order")
-        btnOrder.place(anchor=SW, x=16, y=frmL.winfo_height()-16, width=lblRolls.winfo_width(), height=48)
+        btnOrder.place(anchor=SW, x=16, y=frmL.winfo_height()-16, width=lblMetres.winfo_width(), height=48)
+        root.update()
+
+        self.lblTotalCost = Label(root, bg=root["background"], font=tf.Font(size=16))
+        self.lblTotalCost.place(anchor=SE, x=frmL.winfo_x()-48, y=btnOrder.winfo_y()+btnOrder.winfo_height())
+        self.calcOrderCost()
 
     def colourClick(self, event: Event) -> None:
         caller = event.widget
@@ -236,6 +254,7 @@ class ViewWallpaper():
         self.lblQuality.config(text=self.wallpaper.quality.name.capitalize())
         self.cvsMainDisp.delete("all")
         Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour)
+        self.calcCost()
 
     def additionsSelect(self) -> None:
         if self.liningOp.get() == 0:
@@ -244,10 +263,23 @@ class ViewWallpaper():
         if self.pasteOp.get() == 0:
             self.wallpaper.paste = False
         else: self.wallpaper.paste = True
+        self.calcCost()
+        
     def modificationsSelect(self) -> None:
         self.wallpaper.addition = WallpaperAdditions[self.modificationOp.get()]
-    def rollsSelect(self) -> None:
-        self.wallpaper.rolls = self.rollsOp.get()
+        self.calcCost()
+
+    def metreValidate(self, input: str) -> bool:
+        if input.isdigit() or input == "" or input == ".":
+            return True
+        return False
+    def metreKeyPress(self, event: Event) -> None:
+        if isNumber.check(self.txtMetres.get()):
+            self.wallpaper.rolls = math.ceil(float(self.txtMetres.get()) / 10.05)
+        else:
+            self.wallpaper.rolls = 0
+        self.calcCost()
+        self.lblRolls.config(text=f"Rolls: {self.wallpaper.rolls}")
 
     def addClick(self) -> None:
         if self.modIndex > -1:
@@ -255,9 +287,39 @@ class ViewWallpaper():
             ViewOrder(self.order, self.root)
         else:
             self.order.append(self.wallpaper)
+            self.calcOrderCost()
             self.wallpaper = Wallpaper()
+            self.reset()
     def orderClick(self) -> None:
+        self.reset()
         ViewOrder(self.order, self.root)
+
+    def calcCost(self) -> None:
+        stringDisp = format(self.wallpaper.calcCost(), ",.2f")
+        self.lblCost.config(text=f"Cost: £{stringDisp}")
+
+    def calcOrderCost(self) -> None:
+        orderCost = 0
+        for i in range (len(self.order)):
+            orderCost += self.order[i].calcCost()
+        stringDisp = format(orderCost, ",.2f")
+        self.lblTotalCost.config(text=f"Order Cost: £{stringDisp}")
+
+
+    def reset(self) -> None:
+        self.wallpaper = Wallpaper()
+        self.liningOp.set(int(self.wallpaper.liningPaper))
+        self.pasteOp.set(int(self.wallpaper.paste))
+        self.modificationOp.set(self.wallpaper.addition.name)
+        self.metresVar.set("10.05")
+        
+        self.lblQuality.config(text=self.wallpaper.quality.name.capitalize())
+        self.cvsMainDisp.delete("all")
+        Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour)
+        Draw.drawWallpaper(WallpaperQualities.CHEAP, self.cvsFirstOp, self.wallpaper.colour)
+        Draw.drawWallpaper(WallpaperQualities.EXPENSIVE, self.cvsSecondOp, self.wallpaper.colour)
+        self.additionsSelect()
+        self.modificationsSelect()
 
     def rootClose(self) -> None:
         self.originalRoot.destroy()
@@ -437,5 +499,12 @@ class Draw:
         canvas.create_line(6, cy/2, cx-6, cy/2, fill=colour, width=3)
         canvas.create_line(5, cy/2, cx/2, cy/4, fill=colour, width=3)
         canvas.create_line(5, cy/2, cx/2, cy-cy/4, fill=colour, width=3)
+
+class isNumber():
+    def check(input: str) -> bool:
+        #Finally my knowledge in Regex came to use!!
+        if re.match("^\d+(\.\d+)?$", input):
+            return True
+        return False
 
 Main.mainLoop()
