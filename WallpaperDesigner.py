@@ -1,5 +1,6 @@
 from enum import Enum
 from tkinter import *
+from tkinter import messagebox
 import tkinter.font as tf
 import math
 import re
@@ -62,6 +63,7 @@ class Wallpaper:
                 cost += math.ceil(totalArea / 53) * 13.99
 
         return round(cost, 2)
+    
 
 
 class Main:
@@ -208,8 +210,7 @@ class ViewWallpaper():
         self.lblRolls = Label(frmL, text=f"Rolls: {self.wallpaper.rolls}", bg=frmL["background"], font=tf.Font(size=12))
         self.lblRolls.place(x=self.txtMetres.winfo_x(), y=self.txtMetres.winfo_y()+self.txtMetres.winfo_height())
 
-        btnAdd = Button(frmL, fg="white", bg="orange", command=self.addClick)
-        btnAdd.config(font=tf.Font(size=12, weight="bold"))
+        btnAdd = Button(frmL, fg="white", bg="orange", command=self.addClick, font=tf.Font(size=12, weight="bold"))
         if self.modIndex > -1:
             btnAdd.config(text="Modiy Wallpaper")
         else:
@@ -226,8 +227,7 @@ class ViewWallpaper():
         lblTitle.config(font=tf.Font(size=28))
         lblTitle.place(anchor=NW, x=38, y=12)
 
-        btnOrder = Button(root, fg="white", bg="orange", command=self.orderClick)
-        btnOrder.config(font=tf.Font(size=12, weight="bold"))
+        btnOrder = Button(root, fg="white", bg="orange", command=self.orderClick, font=tf.Font(size=12, weight="bold"))
         if self.modIndex > -1:
             btnOrder.config(text="Return to Order")
         else:
@@ -237,7 +237,7 @@ class ViewWallpaper():
 
         self.lblTotalCost = Label(root, bg=root["background"], font=tf.Font(size=16))
         self.lblTotalCost.place(anchor=SE, x=frmL.winfo_x()-48, y=btnOrder.winfo_y()+btnOrder.winfo_height())
-        self.calcOrderCost()
+        self.lblTotalCost.config(text=f"Order Cost: £{Cost.calcOrderCost(self.order)}")
 
     def colourClick(self, event: Event) -> None:
         caller = event.widget
@@ -274,7 +274,7 @@ class ViewWallpaper():
             return True
         return False
     def metreKeyPress(self, event: Event) -> None:
-        if isNumber.check(self.txtMetres.get()):
+        if IsNumber.check(self.txtMetres.get()):
             self.wallpaper.rolls = math.ceil(float(self.txtMetres.get()) / 10.05)
         else:
             self.wallpaper.rolls = 0
@@ -286,8 +286,9 @@ class ViewWallpaper():
             self.order[self.modIndex] = self.wallpaper
             ViewOrder(self.order, self.root)
         else:
+            messagebox.showinfo("Success", "Successfully added the wallpaper to basket!")
             self.order.append(self.wallpaper)
-            self.calcOrderCost()
+            self.lblTotalCost.config(text=f"Order Cost: £{Cost.calcOrderCost(self.order)}")
             self.wallpaper = Wallpaper()
             self.reset()
     def orderClick(self) -> None:
@@ -297,13 +298,6 @@ class ViewWallpaper():
     def calcCost(self) -> None:
         stringDisp = format(self.wallpaper.calcCost(), ",.2f")
         self.lblCost.config(text=f"Cost: £{stringDisp}")
-
-    def calcOrderCost(self) -> None:
-        orderCost = 0
-        for i in range (len(self.order)):
-            orderCost += self.order[i].calcCost()
-        stringDisp = format(orderCost, ",.2f")
-        self.lblTotalCost.config(text=f"Order Cost: £{stringDisp}")
 
 
     def reset(self) -> None:
@@ -334,10 +328,8 @@ class ViewOrder:
 
         self.order = order
         
-
-
         rootOrder = Toplevel()
-        rootOrder.title("Secondary Window")
+        rootOrder.title("Wallpaper Designer")
         rootOrder.config(width=960, height=540)
         rootOrder.focus()
         rootOrder.grab_set()
@@ -349,6 +341,8 @@ class ViewOrder:
         self.barMain = Scrollbar()
         self.cvsHidden = Canvas(rootOrder)
         self.backFrame = Frame()
+
+        self.lblCost = Label()
 
         self.frmOrdBack = []
         self.cvsOrd = []
@@ -367,8 +361,12 @@ class ViewOrder:
         self.backFrame.bind('<Configure>', self.on_configure)
         self.cvsHidden.create_window(0, 80, window=self.backFrame)
 
-        self.barMain = Scrollbar(rootOrder, command=self.cvsHidden.yview)
-        self.barMain.place(x=720, y=80, relheight=0.85)
+        barBack = Frame(rootOrder, highlightbackground="black", highlightthickness=2)
+        barBack.place(x=717, y=81, width=23, relheight=0.85)
+        self.barMain = Scrollbar(barBack, command=self.cvsHidden.yview)
+        rootOrder.update()
+        self.barMain.place(x=0, y=0, relheight=1)
+        rootOrder.update()
         self.cvsHidden.configure(yscrollcommand=self.barMain.set)
         rootOrder.update()
         
@@ -378,7 +376,7 @@ class ViewOrder:
             self.lblOrdDet.append(Label(self.frmOrdBack[i], bg="#C2C2C2", text=str(self.order[i]), font=tf.Font(size=16), justify=LEFT))
             self.btnEdit.append(Button(self.frmOrdBack[i], bg="#C2C2C2", text="Edit"))
             self.rollsOp.append(StringVar(rootOrder, value=self.order[i].rolls))
-            self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=50, textvariable=self.rollsOp[i], font=tf.Font(size=14)))
+            self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=1000, textvariable=self.rollsOp[i], font=tf.Font(size=14), state="readonly"))
 
         self.orderListDisp(rootOrder)
         Frame(self.backFrame, background="black").place(x=117, rely=0, width=4, relheight=1)
@@ -388,11 +386,18 @@ class ViewOrder:
         rootOrder.update()
         
         frmTop = Frame(rootOrder, bg="darkgray")
-        frmTop.place(x=0, y=0, relwidth=rootOrder.winfo_height(), height=82)
+        frmTop.place(x=0, y=0, relwidth=rootOrder.winfo_width(), height=82)
         lblTitle = Label(frmTop, text="Order", bg="darkgray")
         lblTitle.config(font=tf.Font(size=36))
         lblTitle.place(anchor=NW, x=16, y=10)
         rootOrder.update()
+
+        self.lblCost = Label(rootOrder, text=f"Total Order Cost:\n£{Cost.calcOrderCost(self.order)}", bg="darkgray", font=tf.Font(size=18))
+        self.lblCost.place(x=barBack.winfo_x()+barBack.winfo_width(), y=frmTop.winfo_height(), width=rootOrder.winfo_width()-(barBack.winfo_x()+barBack.winfo_width()), height=128)
+        rootOrder.update()
+
+        btnPrint = Button(rootOrder, text="Print Order", bg="orange", fg="white", font=tf.Font(size=12, weight="bold"), command=self.printOrder)
+        btnPrint.place(anchor=SW, x=self.lblCost.winfo_x()+38, y=rootOrder.winfo_height()-16, width=148, height=56)
 
         cvsBack = Canvas(frmTop, bg="orange", width=32, height=32)
         cvsBack.bind("<Button-1>", self.backClick)
@@ -406,7 +411,6 @@ class ViewOrder:
     def on_configure(self, event: Event) -> None:
         self.cvsHidden.configure(scrollregion=self.cvsHidden.bbox('all'))
        
-
     def orderListDisp(self, rootOrder: Tk) -> None:
         for i in range(len(self.order)):
             self.frmOrdBack[i].place(x=1, y=80+i*115)
@@ -421,6 +425,16 @@ class ViewOrder:
         for i in range(len(self.order)):
             Draw.drawWallpaper(self.order[i].quality, self.cvsOrd[i], self.order[i].colour)
 
+    def printOrder(self) -> None:
+        f = open("Order Details.txt", "w")
+        text = "Order print out:\n"
+        for i in range(len(self.order)):
+            cost = format(self.order[i].calcCost(), ",.2f")
+            text += f"\nWallpaper {i}:\n{str(self.order[i])}\nNumber of rolls: {self.order[i].rolls} - ({round(self.order[i].rolls * 10.05, 2)} metres)\nCost: £{cost}\n"
+        text += f"\n\nTotal cost:\n£{Cost.calcOrderCost(self.order)}"
+        f.write(text)
+        f.close
+
     def rollsSelect(self, i) -> None:
         if int(self.rollsOp[i].get()) == 0:
             self.frmOrdBack[i].destroy()
@@ -434,7 +448,9 @@ class ViewOrder:
             del self.order[i]
             self.orderListDisp(self.rootOrder)
         else:
-            self.order[i].rolls = self.rollsOp[i].get()
+            self.order[i].rolls = int(self.rollsOp[i].get())
+
+        self.lblCost.config(text=f"Total Order Cost:\n£{Cost.calcOrderCost(self.order)}")
 
     def editClick(self, i) -> None:
         self.rootOrder.destroy()
@@ -491,20 +507,22 @@ class Draw:
 
     def drawArrow(canvas: Canvas, colour: str = "white") -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
-        # canvas.create_polygon(4, cy / 2,
-        #                       cx / 2, 4,
-        #                       cx / 2, 32,
-        #                       4, cy / 2, fill=colour)
-        # canvas.create_rectangle(cx / 2, cy * 0.3, cx - 8, cy * 0.6, fill=colour, outline=colour)
         canvas.create_line(6, cy/2, cx-6, cy/2, fill=colour, width=3)
         canvas.create_line(5, cy/2, cx/2, cy/4, fill=colour, width=3)
         canvas.create_line(5, cy/2, cx/2, cy-cy/4, fill=colour, width=3)
 
-class isNumber():
+class IsNumber():
     def check(input: str) -> bool:
         #Finally my knowledge in Regex came to use!!
         if re.match("^\d+(\.\d+)?$", input):
             return True
         return False
+    
+class Cost():
+    def calcOrderCost(order: list) -> str:
+        orderCost = 0
+        for i in range (len(order)):
+            orderCost += order[i].calcCost()
+        return format(orderCost, ",.2f")
 
 Main.mainLoop()
