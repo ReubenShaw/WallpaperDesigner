@@ -347,6 +347,7 @@ class ViewOrder:
             del self.frmOrdBack[i]
             del self.cvsOrd[i]
             del self.lblOrdDet[i]
+            del self.btnEdit[i]
             del self.spnRolls[i]
 
             del self.rollsOp[i]
@@ -387,7 +388,7 @@ class Draw:
                 canvas.create_rectangle(cx - rsx - sx, 0 + rsy, cx - rsx, sy + rsy, fill=fillCol, outline=colour)
                 canvas.create_rectangle(cx - rsx - sx, cy - rsy - sy, cx - rsx, cy - rsy, fill=fillCol, outline=colour)
         else:
-            mod = canvas.winfo_width() / 126
+            mod = canvas.winfo_width() / 129
             for y in range(2):
                 startx=2; starty=(y + 1) * 40 - 15
                 for x in range(5):
