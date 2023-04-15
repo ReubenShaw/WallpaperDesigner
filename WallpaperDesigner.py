@@ -1,30 +1,29 @@
 from enum import Enum
 from tkinter import *
 import tkinter.font as tf
-from copy import copy
+import math
 
 class WallpaperQualities(Enum): #REDO, PRICES WRONG
-    CHEAP = 0.03
-    EXPENSIVE = 0.06
+    CHEAP = 0.003
+    EXPENSIVE = 0.006
 
 class WallpaperAdditions(Enum):
     NONE = 0
-    EMBOSSING = 6
-    FOIL = 12
-    GLITTER = 18
+    EMBOSSING = 0.06
+    FOIL = 0.12
+    GLITTER = 0.18
 
 class Windows(Enum):
     VIEW_WALLPAPER = 0
     VIEW_ORDER = 1
 
 class Wallpaper:
-    def __init__(self, firstDesign = True, colour: str = "purple", rolls: int = 1, quality: WallpaperQualities = WallpaperQualities.CHEAP, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
+    def __init__(self, quality: WallpaperQualities = WallpaperQualities.CHEAP, colour: str = "purple", rolls: int = 1, addition: WallpaperAdditions = WallpaperAdditions.NONE, liningPaper: bool = False, paste: bool = False) -> None:
         """Whilst the constructor does allow custom values, this is purely for testing purposes and instead wallpapers are all initially initiated with default attributes"""
-        self.firstDesign = firstDesign
+        self.quality = quality
         self.colour = colour
         self.rolls = rolls
 
-        self.quality = quality
         self.addition = addition
         self.liningPaper = liningPaper
         self.paste = paste
@@ -32,9 +31,9 @@ class Wallpaper:
     def __str__(self) -> str:
         """Overridden for the display of the wallpaper's data in the view order page's labels"""
         text = ""
-        text += f"Quality: {(str(self.quality.name)).capitalize()}"
+        text += f"Quality: {self.quality.name.capitalize()}"
         if self.addition != WallpaperAdditions.NONE:
-            text += f"\nModification: {(str(self.addition.name)).capitalize()}"
+            text += f"\nModification: {self.addition.name.capitalize()}"
         if self.liningPaper:
             text += "\nLining Paper"
         if self.paste:
@@ -42,27 +41,45 @@ class Wallpaper:
         return text
     
     def calcCost(self) -> float:
-        pass
+        width = 0.52
+        height = 10.05
+
+        totalHeight = height * self.rolls
+        totalArea = width * height * self.rolls
+
+        cost = 0
+        cost += self.quality.value * totalArea
+        cost += self.addition.value * totalHeight
+
+        if self.liningPaper and self.paste:
+            cost += math.ceil(totalArea / 20) * 7.63
+            cost += math.ceil(totalArea / 53) * 13.99 * 2
+        elif self.liningPaper:
+            cost += math.ceil(totalArea / 20) * 7.63
+        elif self.paste:
+            cost += math.ceil(totalArea / 53) * 13.99
+
+        return cost
 
 
 class Main:
     """Main class used to initiate the first page and control the mainloop"""
     def mainLoop() -> None:
         order = []
-        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE, rolls=28))
-        order.append(Wallpaper(False, "gold", liningPaper=True, rolls=17))
-        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE, rolls=19))
+        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=28))
+        order.append(Wallpaper(colour="gold", liningPaper=True, rolls=17))
+        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=19))
         order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=23))
         order.append(Wallpaper(paste=True, colour="VioletRed2", rolls=8))
-        order.append(Wallpaper(False, "gold", liningPaper=True, rolls=1))
-        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE, rolls=18))
-        order.append(Wallpaper(False, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, quality=WallpaperQualities.EXPENSIVE, rolls=25))
+        order.append(Wallpaper(colour="gold", liningPaper=True, rolls=1))
+        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=18))
+        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=25))
         order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=3))
-        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE, rolls=2))
-        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE, rolls=15))
-        order.append(Wallpaper(False, "gold", liningPaper=True))
+        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=2))
+        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=15))
+        order.append(Wallpaper(colour="gold", liningPaper=True))
         order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
-        order.append(Wallpaper(addition=WallpaperAdditions.GLITTER, paste=True, quality=WallpaperQualities.EXPENSIVE, rolls=5))
+        order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=5))
         mainWin = ViewWallpaper(order=order)
         
         mainWin.root.mainloop()
@@ -87,7 +104,6 @@ class ViewWallpaper():
         self.order = order
         self.modIndex = modIndex
 
-        self.selectedOption = StringVar(self.root, str(wallpaper.quality.name).capitalize())
         self.liningOp = IntVar(value=int(wallpaper.liningPaper))
         self.pasteOp = IntVar(value=int(wallpaper.paste))
         self.modificationOp = StringVar(self.root, str(wallpaper.addition.name))
@@ -96,6 +112,11 @@ class ViewWallpaper():
         self.cvsMainDisp = Canvas()
         self.cvsFirstOp = Canvas()
         self.cvsSecondOp = Canvas()
+
+        self.lblQuality = Label()
+        self.lblCost = Label()
+        self.lblTotalCost = Label()
+        self.lblRolls = Label()
 
         self.drawWindow(self.root)
 
@@ -107,7 +128,7 @@ class ViewWallpaper():
         self.cvsMainDisp = Canvas(frmL, width=126, height=126, bg="white")
         self.cvsMainDisp.place(anchor=NW, x=xStart, y=yStart)
         root.update()
-        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
+        Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour)
 
         self.cvsFirstOp = Canvas(frmL, width=56, height=56, bg=self.cvsMainDisp["background"])
         self.cvsFirstOp.bind("<Button-1>", self.designClick)
@@ -118,8 +139,8 @@ class ViewWallpaper():
         self.cvsSecondOp.place(anchor=NW, x=self.cvsFirstOp.winfo_width()+xStart+15, y=self.cvsMainDisp.winfo_height()+yStart+15)
         root.update()
 
-        Draw.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour)
-        Draw.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour)
+        Draw.drawWallpaper(WallpaperQualities.CHEAP, self.cvsFirstOp, self.wallpaper.colour)
+        Draw.drawWallpaper(WallpaperQualities.EXPENSIVE, self.cvsSecondOp, self.wallpaper.colour)
 
 
         cvsColours = []
@@ -129,18 +150,16 @@ class ViewWallpaper():
             cvsColours[i].place(anchor=NW, x=self.cvsMainDisp.winfo_width()+xStart+15, y=yStart+(i*2*self.cvsMainDisp.winfo_height()/7))
 
         xStart = 64
-        lblQuality = Label(frmL, text="Choose Quality:", bg=frmL["background"])
-        lblQuality.config(font=tf.Font(size=12))
-        lblQuality.place(anchor=NE, x=frmL.winfo_width()-xStart-16, y=yStart)
+        lblQualityDescrip = Label(frmL, text="Quality:", bg=frmL["background"], font=tf.Font(size=12))
+        lblQualityDescrip.place(anchor=NE, x=frmL.winfo_width()-xStart-64, y=yStart)
         root.update()
-        drpQuality = OptionMenu(frmL, self.selectedOption, "Cheap", *["Expensive"], command=self.qualitySelect)
-        drpQuality.config(font=tf.Font(size=14), bg = "#C2C2C2")
-        drpQuality.place(anchor=NW, x=lblQuality.winfo_x(), y=yStart+lblQuality.winfo_height(), width=lblQuality.winfo_width()+16)
+        self.lblQuality = Label(frmL, text=self.wallpaper.quality.name.capitalize(), font=tf.Font(size=14), justify=LEFT, bg="#C2C2C2")
+        self.lblQuality.place(anchor=NW, x=lblQualityDescrip.winfo_x(), y=yStart+lblQualityDescrip.winfo_height(), width=lblQualityDescrip.winfo_width()+80)
         root.update()
 
         lblAdditions = Label(frmL, text="Additions", bg="darkgray")
         lblAdditions.config(font=tf.Font(size=12))
-        lblAdditions.place(anchor=NE, x=frmL.winfo_width()-xStart+16, y=yStart+drpQuality.winfo_y()+48, width=drpQuality.winfo_width()+16)
+        lblAdditions.place(anchor=NW, x=self.lblQuality.winfo_x(), y=yStart+self.lblQuality.winfo_y()+48, width=self.lblQuality.winfo_width()+16)
         root.update()
         frmAdditions = Frame(frmL, bg="#C2C2C2")
         frmAdditions.place(anchor=NW, x=lblAdditions.winfo_x(), y=lblAdditions.winfo_y()+lblAdditions.winfo_height(), width=lblAdditions.winfo_width(), 
@@ -205,20 +224,19 @@ class ViewWallpaper():
     def colourClick(self, event: Event) -> None:
         caller = event.widget
         self.wallpaper.colour = caller["background"]
-        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
-        Draw.drawWallpaper(True, self.cvsFirstOp, self.wallpaper.colour)
-        Draw.drawWallpaper(False, self.cvsSecondOp, self.wallpaper.colour)
+        Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour)
+        Draw.drawWallpaper(WallpaperQualities.CHEAP, self.cvsFirstOp, self.wallpaper.colour)
+        Draw.drawWallpaper(WallpaperQualities.EXPENSIVE, self.cvsSecondOp, self.wallpaper.colour)
     def designClick(self, event: Event) -> None:
         caller = event.widget
         if caller.winfo_name == self.cvsFirstOp.winfo_name:
-            self.wallpaper.firstDesign = True
+            self.wallpaper.quality = WallpaperQualities.CHEAP
         else:
-            self.wallpaper.firstDesign = False
+            self.wallpaper.quality = WallpaperQualities.EXPENSIVE
+        self.lblQuality.config(text=self.wallpaper.quality.name.capitalize())
         self.cvsMainDisp.delete("all")
-        Draw.drawWallpaper(self.wallpaper.firstDesign, self.cvsMainDisp, self.wallpaper.colour)
+        Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour)
 
-    def qualitySelect(self, selection: str) -> None:
-        self.wallpaper.quality = WallpaperQualities[((selection).upper()).strip()]
     def additionsSelect(self) -> None:
         if self.liningOp.get() == 0:
             self.wallpaper.liningPaper = False
@@ -330,7 +348,7 @@ class ViewOrder:
     def orderListDisp(self, rootOrder: Tk) -> None:
         for i in range(len(self.order)):
             self.frmOrdBack[i].place(x=1, y=80+i*115)
-            self.cvsOrd[i].place(x=25, y=25, width=63, height=63)
+            self.cvsOrd[i].place(x=24, y=24, width=65, height=65)
             self.lblOrdDet[i].place(x=145, y=4)
             self.btnEdit[i].config(command=lambda i=i: self.editClick(i))
             self.btnEdit[i].place(anchor=NE, x=464, y=67, width=32, height=32)
@@ -339,7 +357,7 @@ class ViewOrder:
             self.backFrame.config(height=len(self.order)*115+80)
         rootOrder.update()
         for i in range(len(self.order)):
-            Draw.drawWallpaper(self.order[i].firstDesign, self.cvsOrd[i], self.order[i].colour)
+            Draw.drawWallpaper(self.order[i].quality, self.cvsOrd[i], self.order[i].colour)
 
     def rollsSelect(self, i) -> None:
         if int(self.rollsOp[i].get()) == 0:
@@ -371,9 +389,9 @@ class ViewOrder:
 
 
 class Draw:
-    def drawWallpaper(firstDesign: bool, canvas: Canvas, colour: str) -> None:
+    def drawWallpaper(quality: WallpaperQualities, canvas: Canvas, colour: str) -> None:
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
-        if firstDesign:
+        if quality == WallpaperQualities.EXPENSIVE:
             sx = (int)(cx / 5); sy = (int)(cy / 5)
 
             for i in range(5):
