@@ -482,7 +482,7 @@ class ViewOrder:
         text = "Order print out:\n"
         for i in range(len(self.order)):
             cost = format(self.order[i].calcFinalCost(), ",.2f")
-            text += f"\nWallpaper {i}:\n{str(self.order[i])}\nNumber of rolls: {self.order[i].rolls} - ({round(self.order[i].rolls * 10.05, 2)} metres)\nCost: £{cost}\n"
+            text += f"\nWallpaper {i}:\nColour: {self.order[i].colour.capitalize()}\n{str(self.order[i])}\nNumber of rolls: {self.order[i].rolls} - ({round(self.order[i].rolls * 10.05, 2)} metres)\nCost: £{cost}\n"
         text += f"\n\nTotal cost:\n£{Cost.calcOrderCost(self.order)}"
         f.write(text)
         f.close
