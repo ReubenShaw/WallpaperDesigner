@@ -96,7 +96,7 @@ class Main:
         # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=3))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=2))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=15))
-        # order.append(Wallpaper(colour="gold", liningPaper=True))
+        order.append(Wallpaper(colour="gold", liningPaper=True))
         # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=5))
         
@@ -125,6 +125,7 @@ class ViewWallpaper():
         self.root.grab_set()
         self.root.resizable(False, False)
         self.root.protocol('WM_DELETE_WINDOW', self.rootClose) #Needed as depending on which iteration of the window this is it may not be the main window, meaning if it's closed the program will not exit and additional logic is needed
+        self.root.bind("<FocusIn>", self.rootFocus)
 
         self.availableColours = ["purple", "DarkSlateGray4", "deep sky blue", "light sea green", "VioletRed2", "gold"]
         self.wallpaper = wallpaper
@@ -234,6 +235,7 @@ class ViewWallpaper():
         #This could be done more neatly but I had a lot of issues with getting tkinter to accept converted enum values across the entire program, so this worked best
         for (text, value) in values.items():
             Radiobutton(frmModifications, variable=self.modificationOp, text=text, value=value, bg=frmModifications["background"], font=tf.Font(size=12), command=self.modificationsSelect).place(anchor=NW, y=2+i*30)
+            #Radiobuttons were chosen as unlike checkbuttons only one from the group can be on at a time
             i+=1
 
         root.update()
@@ -289,65 +291,95 @@ class ViewWallpaper():
         Draw.drawWallpaper(WallpaperQualities.EXPENSIVE, self.cvsSecondOp, self.wallpaper.colour)
     
     def designClick(self, event: Event) -> None:
+        """Method used to handle events from both the design canvas selections"""
+        
         caller = event.widget
-        if caller.winfo_name == self.cvsFirstOp.winfo_name:
+        if caller.winfo_name() == self.cvsFirstOp.winfo_name(): #Checks the canvas name against the first design's canvas name, to determine the selected quality
             self.wallpaper.quality = WallpaperQualities.CHEAP
         else:
             self.wallpaper.quality = WallpaperQualities.EXPENSIVE
+
         self.lblQuality.config(text=self.wallpaper.quality.name.capitalize())
-        self.cvsMainDisp.delete("all")
+        self.cvsMainDisp.delete("all") #This clears the canvas so drawing to it works properly
         Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour)
         self.calcCost()
 
     def additionsSelect(self) -> None:
+        """Handles both checkbutton's tick and untick events"""
+        
         if self.liningOp.get() == 0:
             self.wallpaper.liningPaper = False
-        else: self.wallpaper.liningPaper = True
+        else: 
+            self.wallpaper.liningPaper = True
+            
         if self.pasteOp.get() == 0:
             self.wallpaper.paste = False
-        else: self.wallpaper.paste = True
+        else: 
+            self.wallpaper.paste = True
         self.calcCost()
         
     def modificationsSelect(self) -> None:
-        self.wallpaper.addition = WallpaperAdditions[self.modificationOp.get()]
+        """Handles the radiobutton check events"""
+        
+        self.wallpaper.addition = WallpaperAdditions[self.modificationOp.get()] #Converts the already captalised modification name to the relevant enum
         self.calcCost()
 
     def metreValidate(self, input: str) -> bool:
+        """Function that handles the callback event for entering metres, will cancel the input if it fails\n
+        Checks if the input is either a digit, \".\" or an empty space (needed for backspace)"""
+        
         if input.isdigit() or input == "" or input == ".":
             return True
         return False
     
     def metreKeyPress(self, event: Event) -> None:
+        """Subroutine that runs everytime data is entered into the entering metres box to check if it's a valid number and if so to update the rolls display\n
+        Despite metreValidate preventing bad input, the check here is still needed as it could be either blank or a half number like: 43. which would cause an error when converting to int"""
+        
         if IsNumber.check(self.txtMetres.get()):
-            self.wallpaper.rolls = math.ceil(float(self.txtMetres.get()) / 10.05)
+            self.wallpaper.rolls = math.ceil(float(self.txtMetres.get()) / 10.05) #math.ceil as you always need 1 roll up when a decimal
         else:
             self.wallpaper.rolls = 0
         self.calcCost()
         self.lblRolls.config(text=f"Rolls: {self.wallpaper.rolls}")
 
     def addClick(self) -> None:
-        if self.modIndex > -1:
-            self.order[self.modIndex] = self.wallpaper
-            ViewOrder(self.order, self.root)
+        """Manages either adding a wallpaper to the order, or modifying a wallpaper in modification and returning to the other window"""
+        
+        if IsNumber.check(self.txtMetres.get()) and float(self.txtMetres.get()) > 0: #Check to ensure it's a valid number and more than 1 roll is being added
+            if self.modIndex > -1: #If modindex is > -1 then that means this window was accessed from the order window and is being used for modification, thus a wallpaper needs updating
+                self.order[self.modIndex] = self.wallpaper
+                self.reset()
+                self.modIndex = -1
+                self.drawWindow(self.root)
+                ViewOrder(self.order, self.root)
+            else:
+                messagebox.showinfo("Success", "Successfully added the wallpaper to basket!")
+                self.order.append(self.wallpaper)
+                self.lblTotalCost.config(text=f"Order Cost: £{Cost.calcOrderCost(self.order)}")
+                self.wallpaper = Wallpaper()
+                self.reset()
         else:
-            messagebox.showinfo("Success", "Successfully added the wallpaper to basket!")
-            self.order.append(self.wallpaper)
-            self.lblTotalCost.config(text=f"Order Cost: £{Cost.calcOrderCost(self.order)}")
-            self.wallpaper = Wallpaper()
-            self.reset()
+            messagebox.showerror("Failure", "Invalid metre entry!")
 
     def orderClick(self) -> None:
-        self.reset()
-        if self.modIndex > -1: 
-            self.originalRoot.destroy()
+        """Opens the order window"""
+        
+        self.reset() #This makes sure if they come back to the window any half complete wallpapers are cleared
+        if self.modIndex > -1: #Check if this window was accessed through the order window
+            self.originalRoot.destroy() #Destroys the original root if so, as this is the original order window and you want it out of memory
         ViewOrder(self.order, self.root)
 
     def calcCost(self) -> None:
+        """Used to calculate the individual cost of a wallpaper"""
+        
         stringDisp = format(self.wallpaper.calcFinalCost(), ",.2f")
         self.lblCost.config(text=f"Cost: £{stringDisp}")
 
 
     def reset(self) -> None:
+        """Resets the window to display the default settings for wallpaper"""
+        
         self.wallpaper = Wallpaper()
         self.liningOp.set(int(self.wallpaper.liningPaper))
         self.pasteOp.set(int(self.wallpaper.paste))
@@ -356,13 +388,20 @@ class ViewWallpaper():
         
         self.lblQuality.config(text=self.wallpaper.quality.name.capitalize())
         self.cvsMainDisp.delete("all")
-        Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour)
+        Draw.drawWallpaper(self.wallpaper.quality, self.cvsMainDisp, self.wallpaper.colour) #Redraws needed to update colour
         Draw.drawWallpaper(WallpaperQualities.CHEAP, self.cvsFirstOp, self.wallpaper.colour)
         Draw.drawWallpaper(WallpaperQualities.EXPENSIVE, self.cvsSecondOp, self.wallpaper.colour)
         self.additionsSelect()
         self.modificationsSelect()
+        
+    def rootFocus(self, event: Event) -> None:
+        """Called whenever the window is refocussed, used just for updating the total order cost when the winow is refocused after leaving the order window"""
+        
+        self.lblTotalCost.config(text=f"Order Cost: £{Cost.calcOrderCost(self.order)}")
 
     def rootClose(self) -> None:
+        """Called whenever the window is closed, performs a cleaner exit to ensure that other hidden windows don't hang the program"""
+        
         self.root.quit()
 
 
@@ -421,7 +460,7 @@ class ViewOrder:
             self.frmOrdBack.append(Frame(self.backFrame, background="#C2C2C2", highlightbackground="black", highlightthickness=2, width=720, height=115))
             self.cvsOrd.append(Canvas(self.frmOrdBack[i], bg="white"))
             self.lblOrdDet.append(Label(self.frmOrdBack[i], bg="#C2C2C2", text=str(self.order[i]), font=tf.Font(size=16), justify=LEFT))
-            self.btnEdit.append(Button(self.frmOrdBack[i], bg="#C2C2C2", text="Edit"))
+            self.btnEdit.append(Button(self.frmOrdBack[i], bg="orange", text="Edit"))
             self.rollsOp.append(StringVar(rootOrder, value=self.order[i].rolls))
             self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=1000, textvariable=self.rollsOp[i], font=tf.Font(size=14), state="readonly"))
             cost = format(self.order[i].calcFinalCost(), ",.2f")
@@ -482,7 +521,7 @@ class ViewOrder:
         text = "Order print out:\n"
         for i in range(len(self.order)):
             cost = format(self.order[i].calcFinalCost(), ",.2f")
-            text += f"\nWallpaper {i}:\nColour: {self.order[i].colour.capitalize()}\n{str(self.order[i])}\nNumber of rolls: {self.order[i].rolls} - ({round(self.order[i].rolls * 10.05, 2)} metres)\nCost: £{cost}\n"
+            text += f"\nWallpaper {i+1}:\nColour: {self.order[i].colour.capitalize()}\n{str(self.order[i])}\nNumber of rolls: {self.order[i].rolls} - ({round(self.order[i].rolls * 10.05, 2)} metres)\nCost: £{cost}\n"
         text += f"\n\nTotal cost:\n£{Cost.calcOrderCost(self.order)}"
         f.write(text)
         f.close
@@ -505,6 +544,8 @@ class ViewOrder:
 
             if len(self.order) < 4:
                 self.cvsHidden.yview_moveto(0)
+                if len(self.order) == 0:
+                    self.cvsHidden.destroy()
         else:
             self.order[i].rolls = int(self.rollsOp[i].get())
 
@@ -523,12 +564,18 @@ class ViewOrder:
         self.rootOrder.destroy()
 
     def rootOrderClose(self) -> None:
+        """Called whenever the window is closed, performs a cleaner exit to ensure that other hidden windows don't hang the program"""
+        
         self.originalRoot.destroy()
         self.rootOrder.quit()
 
 
 class Draw:
+    """Used for drawing the arrow on the return button and both wallpapers"""
+    
     def drawWallpaper(quality: WallpaperQualities, canvas: Canvas, colour: str) -> None:
+        """Method used for drawing the 2 different designs canvases can have, whenever a canvas design is drawn this method must be envoked"""
+        
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
         if quality == WallpaperQualities.EXPENSIVE:
             sx = (int)(cx / 5); sy = (int)(cy / 5)
@@ -567,6 +614,8 @@ class Draw:
                     startx+=25
 
     def drawArrow(canvas: Canvas, colour: str = "white") -> None:
+        """Small subroutine used to draw the arrow on the order screen's return button"""
+        
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
         canvas.create_line(6, cy/2, cx-6, cy/2, fill=colour, width=3)
         canvas.create_line(5, cy/2, cx/2, cy/4, fill=colour, width=3)
@@ -575,8 +624,10 @@ class Draw:
 class IsNumber():
     """Class used just for checking if a string is a number, invoke IsNumber.check()"""
     #Python's isDigit(), isNumeric() and isDecimal() all return false if a decimal is present, thus this class is needed
+    
     def check(input: str) -> bool:
         """Utilises regex to determine if a provided string is a number, decimal or not"""
+        
         #Finally my knowledge in Regex came to use!!
         #^ - Start of string, \d+ - One or more digits [0-9], ()? - Zero or one of whats inside the brackets, . - Literally checks for [.] character, $ - End of string
         if re.match("^\d+(.\d+)?$", input):
