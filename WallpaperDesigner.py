@@ -350,7 +350,7 @@ class ViewWallpaper():
     def addClick(self) -> None:
         """Manages either adding a wallpaper to the order, or modifying a wallpaper in modification and returning to the other window"""
         
-        if IsNumber.check(self.txtMetres.get()) and float(self.txtMetres.get()) > 0: #Check to ensure it's a valid number and more than 1 roll is being added
+        if self.wallpaper.rolls > 0: #Check to ensure more than 1 roll is being added
             if self.modIndex > -1: #If modindex is > -1 then that means this window was accessed from the order window and is being used for modification, thus a wallpaper needs updating
                 self.order[self.modIndex] = self.wallpaper
                 self.reset(True)
@@ -425,9 +425,9 @@ class ViewOrder:
         order must be a list of wallpapers, root must be the caller's root, so that it can be stored and removed later"""
         
         self.originalRoot = root
-        root.withdraw()
+        root.withdraw() #Withdraw not destroy, as if destroyed the main root is closed exiting the program
 
-        self.order = order
+        self.order = order #Used only for returning to the original window
         
         rootOrder = Toplevel()
         rootOrder.title("Wallpaper Designer")
@@ -440,55 +440,62 @@ class ViewOrder:
         self.rootOrder = rootOrder
 
         self.barMain = Scrollbar()
-        self.cvsHidden = Canvas(rootOrder)
-        self.backFrame = Frame()
+        self.cvsHidden = Canvas(rootOrder) #Hiden widget used to enable scrolling, as Canvas is a scroll object
+        self.backFrame = Frame() #Drawn ont cvsHidden so that the widgets
 
         self.lblTotalCost = Label()
 
-        self.frmOrdBack = []
-        self.cvsOrd = []
-        self.lblOrdDet = []
-        self.btnEdit = []
-        self.spnRolls = []
-        self.rollsOp = []
-        self.lblCost = []
+        #Widgets used in drawing the scroll region
+        self.frmOrdBack : Frame = []
+        self.cvsOrd : Canvas = []
+        self.lblOrdDet : Label = []
+        self.btnEdit : Button = []
+        self.spnRolls : Spinbox = []
+        self.rollsOp : StringVar = [] #Stores the value of the scrollbars
+        self.lblCost : Label = []
 
         self.drawWindow(rootOrder)
 
     def drawWindow(self, rootOrder: Tk) -> None:
+        """Method used for drawing widgets"""
+        
         rootOrder.update()
-        self.cvsHidden.place(x=0, y=0, relheight=1, relwidth=1)
+        self.cvsHidden.place(x=0, y=0, relheight=1, relwidth=1) #The scroll canvas works only if it's drawn over the entire scree
 
+        #The back frame provides the visible area which can be changed, the height is equal to an offset of 80 (the height of the top of the window label) and then multiplies the number of entries by the height of the framestheir data is drawn to
         self.backFrame = Frame(self.cvsHidden, width=rootOrder.winfo_width(), height=len(self.order)*115+80)
-        self.backFrame.bind('<Configure>', self.on_configure)
-        self.cvsHidden.create_window(0, 80, window=self.backFrame)
+        self.backFrame.bind('<Configure>', self.on_configure) #Boilerplate code to make scrolling work properly
+        self.cvsHidden.create_window(0, 80, window=self.backFrame) #Creates the window that gets scrolled in the hidden region
 
-        barBack = Frame(rootOrder, highlightbackground="black", highlightthickness=2)
-        barBack.place(x=717, y=81, width=23, relheight=0.85)
+        barBack = Frame(rootOrder, highlightbackground="black", highlightthickness=2) #This is an outline for the scroll bar as in Windows 11 the way it looks is different to Windows 10, making it difficult to see
+        barBack.place(x=717, y=81, width=23, relheight=0.85) #RelHeight is just the percentage of the screen the bar takes up
+        
         self.barMain = Scrollbar(barBack, command=self.cvsHidden.yview)
         rootOrder.update()
-        self.barMain.place(x=0, y=0, relheight=1)
+        self.barMain.place(x=0, y=0, relheight=1) #RelHeight 1 here as it's drawn to the barBack frame, meaning it's already the perfect height
+        
         rootOrder.update()
-        self.cvsHidden.configure(yscrollcommand=self.barMain.set)
+        self.cvsHidden.configure(yscrollcommand=self.barMain.set) #Sets the scrollbar to act on the hidden canvas
         rootOrder.update()
         
-        for i in range(len(self.order)):
+        for i in range(len(self.order)): #For loop that creates all the widgets used for display, does not place
             self.frmOrdBack.append(Frame(self.backFrame, background="#C2C2C2", highlightbackground="black", highlightthickness=2, width=720, height=115))
             self.cvsOrd.append(Canvas(self.frmOrdBack[i], bg="white"))
             self.lblOrdDet.append(Label(self.frmOrdBack[i], bg="#C2C2C2", text=str(self.order[i]), font=tf.Font(size=16), justify=LEFT))
             self.btnEdit.append(Button(self.frmOrdBack[i], bg="orange", text="Edit"))
             self.rollsOp.append(StringVar(rootOrder, value=self.order[i].rolls))
-            self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=1000, textvariable=self.rollsOp[i], font=tf.Font(size=14), state="readonly"))
-            cost = format(self.order[i].calcFinalCost(), ",.2f")
+            self.spnRolls.append(Spinbox(self.frmOrdBack[i], from_=0, to=10000, textvariable=self.rollsOp[i], font=tf.Font(size=14), state="readonly"))
+            cost = format(self.order[i].calcFinalCost(), ",.2f") #For whatever reason Python gets unhappy with passing a format within formatted strings
             self.lblCost.append(Label(self.frmOrdBack[i], text=f"Cost: £{cost}", bg="#C2C2C2", font=tf.Font(size=12)))
 
-        self.orderListDisp(rootOrder)
-        Frame(self.backFrame, background="black").place(x=117, rely=0, width=4, relheight=1)
+        self.orderListDisp(rootOrder) #Used to place all the widgets
+        Frame(self.backFrame, background="black").place(x=117, rely=0, width=4, relheight=1) #Places the dividing verticle black bars, placing them on the scroll region isn't necissary but fixes a small visual glitch where it'd overrun the list by 1 pixel
         Frame(self.backFrame, background="black").place(x=480, rely=0, width=4, relheight=1)
 
 
         rootOrder.update()
         
+        #Places the Window's label, has to be done here so it covers the "hidden" canvas properly
         frmTop = Frame(rootOrder, bg="darkgray")
         frmTop.place(x=0, y=0, relwidth=rootOrder.winfo_width(), height=82)
         lblTitle = Label(frmTop, text="Order", bg="darkgray")
@@ -503,78 +510,100 @@ class ViewOrder:
         btnPrint = Button(rootOrder, text="Print Order", bg="orange", fg="white", font=tf.Font(size=12, weight="bold"), command=self.printOrder)
         btnPrint.place(anchor=SW, x=self.lblTotalCost.winfo_x()+38, y=rootOrder.winfo_height()-16, width=148, height=56)
 
+        #cvsBack is the button used for going back, an arrow is drawn onto it however so I used a canvas instead of a regular button
         cvsBack = Canvas(frmTop, bg="orange", width=32, height=32)
         cvsBack.bind("<Button-1>", self.backClick)
         cvsBack.place(anchor=NE, x=938, y=20)
         rootOrder.update()
-
-
-        self.cvsHidden.yview_moveto(0)
         Draw.drawArrow(cvsBack)
 
+        self.cvsHidden.yview_moveto(0) #Resets the scrollregion so display works properly
+
     def on_configure(self, event: Event) -> None:
+        """Boilerplate method to make sure scrollbar updates properly"""
+        
         self.cvsHidden.configure(scrollregion=self.cvsHidden.bbox('all'))
        
     def orderListDisp(self, rootOrder: Tk) -> None:
+        """Method used to place all widgets used in the display list"""
+        
         for i in range(len(self.order)):
             self.frmOrdBack[i].place(x=1, y=80+i*115)
+            
             self.cvsOrd[i].place(x=24, y=24, width=65, height=65)
+            rootOrder.update()
+            Draw.drawWallpaper(self.order[i].quality, self.cvsOrd[i], self.order[i].colour)
+            
             self.lblOrdDet[i].place(x=145, y=4)
-            self.btnEdit[i].config(command=lambda i=i: self.editClick(i))
+            
+            self.btnEdit[i].config(command=lambda i=i: self.editClick(i)) #This Lambda is to make it so that the command label can pass the index to the event method, basically tricks it into not passing by reference but instead by value
             self.btnEdit[i].place(anchor=NE, x=464, y=67, width=32, height=32)
+            
             self.spnRolls[i].config(command=lambda i=i: self.rollsSelect(i))
             self.spnRolls[i].place(anchor=NW, x=528, y=30, width=128)
             rootOrder.update()
+            
+            #Simple label doesn't require any special work
             Label(self.frmOrdBack[i], text="Rolls:", font=tf.Font(size=12), fg="black", bg=self.frmOrdBack[i]["background"]).place(anchor=SW, x=self.spnRolls[i].winfo_x()-2, y=self.spnRolls[i].winfo_y()-2, width=self.spnRolls[i].winfo_width())
+            
             self.lblCost[i].place(anchor=NW, x=self.spnRolls[i].winfo_x()-2, y=72, width=self.spnRolls[i].winfo_width())
             self.backFrame.config(height=len(self.order)*115+80)
-        rootOrder.update()
-        for i in range(len(self.order)):
-            Draw.drawWallpaper(self.order[i].quality, self.cvsOrd[i], self.order[i].colour)
 
     def printOrder(self) -> None:
-        f = open("Order Details.txt", "w")
+        """Method used for printing order to directory, file called Order Details.txt"""
+        
+        f = open("Order Details.txt", "w") #Creates or opens file, if it exists
         text = "Order print out:\n"
         for i in range(len(self.order)):
-            cost = format(self.order[i].calcFinalCost(), ",.2f")
-            text += f"\nWallpaper {i+1}:\nColour: {self.order[i].colour.capitalize()}\n{str(self.order[i])}\nNumber of rolls: {self.order[i].rolls} - ({round(self.order[i].rolls * 10.05, 2)} metres)\nCost: £{cost}\n"
+            cost = format(self.order[i].calcFinalCost(), ",.2f") #Again, strangeness with Pthon's formatted strings and format() means this has t be done seperately
+            #Most stuff that's printed comes from the override method in Wallpaper for converting to string 
+            text += f"\nWallpaper {i+1}:\nColour: {self.order[i].colour.capitalize()}\n{str(self.order[i])}\n\
+                        Number of rolls: {self.order[i].rolls} - ({round(self.order[i].rolls * 10.05, 2)} metres)\nCost: £{cost}\n"
         text += f"\n\nTotal cost:\n£{Cost.calcOrderCost(self.order)}"
-        f.write(text)
+        f.write(text) #Write replaces any text already in the document
         f.close
 
         messagebox.showinfo("Success", "Successfully printed to file!")
 
     def rollsSelect(self, i) -> None:
-        if int(self.rollsOp[i].get()) == 0:
-            self.frmOrdBack[i].destroy()
-            del self.frmOrdBack[i]
+        """Used for removing from the list and increasing the number of rolls, """
+        
+        if int(self.rollsOp[i].get()) == 0: #Checks if the new value is 0, in which case rolls need to be removed
+            self.frmOrdBack[i].destroy() #Destroying the back frame kills all the children
+            
+            del self.frmOrdBack[i] 
             del self.cvsOrd[i]
             del self.lblOrdDet[i]
             del self.btnEdit[i]
             del self.spnRolls[i]
             del self.lblCost[i]
-
             del self.rollsOp[i]
             del self.order[i]
-            self.orderListDisp(self.rootOrder)
+            
+            self.orderListDisp(self.rootOrder) #Replaces everything in the order list
 
-            if len(self.order) < 4:
+            if len(self.order) < 4: #A bug occured when the screen wasn't filled with the order the scroll bar would get stuck in the middle, simply just moves it back to the top if this is the case
                 self.cvsHidden.yview_moveto(0)
                 if len(self.order) == 0:
-                    self.cvsHidden.destroy()
+                    self.cvsHidden.destroy() #This stops a pair of black bars from being left over
         else:
             self.order[i].rolls = int(self.rollsOp[i].get())
 
-        for i in range(len(self.order)):
+        for i in range(len(self.order)): #Updates the new cost of the wallpaper
             cost = format(self.order[i].calcFinalCost(), ",.2f")
             self.lblCost[i].config(text=f"Cost: £{cost}")
+            
         self.lblTotalCost.config(text=f"Total Order Cost:\n£{Cost.calcOrderCost(self.order)}")
 
     def editClick(self, i) -> None:
+        """Exits this window and move on to the previous window, providing it the index in the order where the modified wallpaper is located"""
+        
         self.rootOrder.destroy()
         ViewWallpaper(Tk(), self.order[i], self.order, i)
 
     def backClick(self, event: Event) -> None:
+        """Exits this window and returns to the previous one"""
+        
         self.originalRoot.iconify()
         self.originalRoot.deiconify()
         self.rootOrder.destroy()
@@ -592,25 +621,29 @@ class Draw:
         """Method used for drawing the 2 different designs canvases can have, whenever a canvas design is drawn this method must be envoked"""
         
         cx = canvas.winfo_width(); cy = canvas.winfo_height()
+        
         if quality == WallpaperQualities.EXPENSIVE:
-            sx = (int)(cx / 5); sy = (int)(cy / 5)
+            sx = (int)(cx / 5); sy = (int)(cy / 5) #Start locations for the draw, since each square is drawn halfway into another square, despite in total there being 10 squares per axis only / 5 is needed
 
-            for i in range(5):
-                rsx = (sx / 2 * i); rsy = (sy / 2 * i)
-                if i % 2 == 0:
+            for i in range(5): #Single for loop used as 4 squares are drawn each loop
+                rsx = (sx / 2 * i); rsy = (sy / 2 * i) #End location for each draw, the / 2 is because each square is drawn only halfway into the other square
+                
+                if i % 2 == 0: #Checks whether the index is even, as ever other draw needs to fill in the shape
                     fillCol = colour
                 else:
                     fillCol = canvas["background"]
             
-                canvas.create_rectangle(0 + rsx, 0 + rsy, sx + rsx, sy + rsy, fill=fillCol, outline=colour)
-                canvas.create_rectangle(0 + rsx, cy - sy - rsy, sx + rsx, cy - rsy, fill=fillCol, outline=colour)
-                canvas.create_rectangle(cx - rsx - sx, 0 + rsy, cx - rsx, sy + rsy, fill=fillCol, outline=colour)
-                canvas.create_rectangle(cx - rsx - sx, cy - rsy - sy, cx - rsx, cy - rsy, fill=fillCol, outline=colour)
+                canvas.create_rectangle(0 + rsx, 0 + rsy, sx + rsx, sy + rsy, fill=fillCol, outline=colour) #Top left
+                canvas.create_rectangle(0 + rsx, cy - sy - rsy, sx + rsx, cy - rsy, fill=fillCol, outline=colour) #Bottom left
+                canvas.create_rectangle(cx - rsx - sx, 0 + rsy, cx - rsx, sy + rsy, fill=fillCol, outline=colour) #Top right
+                canvas.create_rectangle(cx - rsx - sx, cy - rsy - sy, cx - rsx, cy - rsy, fill=fillCol, outline=colour) #Bottom right
         else:
-            mod = float(cx-4)/52
+            mod = float(cx - 4) / 52 #mod is used to effect the percentage size of the design, so it can be drawn to canvases of varying size
+            
             for y in range(2):
-                sx=2; sy=(y+1)*15+9
-                for x in range(5):
+                sx = 2; sy=(y + 1) * 15 + 9 #Start draw locations, sy is multiplied by 15 (as that's the height of one star) and then has 9 added to assist with centring it properly
+                
+                for x in range(5): #Draws 2 overlapping triangles to get the star shape display
                     canvas.create_polygon(sx*mod,sy*mod,
                                           (sx+5)*mod, (sy-15)*mod,
                                           (sx+10)*mod, sy*mod,
@@ -621,7 +654,7 @@ class Draw:
                                           (sx+10)*mod,(sy-10)*mod,
                                           fill=colour, outline=colour)
                     
-                    sx += 10
+                    sx += 10 #Adds 10 as each star is 10 wide
 
     def drawArrow(canvas: Canvas, colour: str = "white") -> None:
         """Small subroutine used to draw the arrow on the order screen's return button"""
@@ -645,10 +678,14 @@ class IsNumber():
         return False
     
 class Cost():
+    """Class used for calculating the total order cost, call calcOrderCost"""
+    
     def calcOrderCost(order: list) -> str:
+        """Calculates the total order cost and returns it in format 'x.xx'"""
+        
         orderCost = 0
         for i in range (len(order)):
             orderCost += order[i].calcFinalCost()
         return format(orderCost, ",.2f")
 
-Main.mainLoop()
+Main.mainLoop() #Start call for the entire program
