@@ -1,3 +1,10 @@
+"""
+IMPORTANT INFORMATION FOR REVIEWER:
+
+Lines 94-107 have commented out test data, uncomment to get immediate data to test with
+"""
+
+#The program:
 from enum import Enum
 from tkinter import *
 from tkinter import messagebox
