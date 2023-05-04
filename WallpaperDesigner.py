@@ -96,7 +96,7 @@ class Main:
         # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=3))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=2))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=15))
-        order.append(Wallpaper(colour="gold", liningPaper=True))
+        #order.append(Wallpaper(colour="gold", liningPaper=True))
         # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=5))
         
@@ -130,7 +130,6 @@ class ViewWallpaper():
         self.liningOp = IntVar(value=int(wallpaper.liningPaper))
         self.pasteOp = IntVar(value=int(wallpaper.paste))
         self.modificationOp = StringVar(self.root, str(wallpaper.addition.name))
-        self.metresVar = StringVar(root, format(round(self.wallpaper.rolls * 10.05, 2), ",.2f"))
 
         #Canvases for displaying the designs, needs to be accessible everywhere as multiple subroutines interact with the design
         self.cvsMainDisp = Canvas()
@@ -248,9 +247,10 @@ class ViewWallpaper():
         root.update()
         
         callback = root.register(self.metreValidate) #This callback is needed so that I can restrict entry into the textbox to just allowed values
-        self.txtMetres = Entry(frmMain, font=tf.Font(size=12), validate="key", validatecommand=(callback, '%S'), textvariable=self.metresVar)
+        self.txtMetres = Entry(frmMain, font=tf.Font(size=12), validate="key", validatecommand=(callback, '%S'))
         self.txtMetres.bind("<KeyRelease>", self.metreKeyPress)
         self.txtMetres.place(anchor=NW, x=lblMetres.winfo_x(), y=lblMetres.winfo_y()+lblMetres.winfo_height(), width=lblMetres.winfo_width(), height=20)
+        self.txtMetres.insert(0, round(self.wallpaper.rolls * 10.05, 2)) #Add the metres of wallpaper needed
         root.update()
         
         self.lblRolls = Label(frmMain, text=f"Rolls: {self.wallpaper.rolls}", bg=frmMain["background"], font=tf.Font(size=10))
@@ -332,8 +332,9 @@ class ViewWallpaper():
         """Function that handles the callback event for entering metres, will cancel the input if it fails\n
         Checks if the input is either a digit, \".\" or an empty space (needed for backspace)"""
         
-        if input.isdigit() or input == "" or input == ".":
+        if IsNumber.check(input) or input == "" or input == ".":
             return True
+        print(f"Failed as {input} is not allowed")
         return False
     
     def metreKeyPress(self, event: Event) -> None:
@@ -395,7 +396,11 @@ class ViewWallpaper():
         self.liningOp.set(int(self.wallpaper.liningPaper))
         self.pasteOp.set(int(self.wallpaper.paste))
         self.modificationOp.set(self.wallpaper.addition.name)
-        self.metresVar.set("10.05")
+        
+        self.txtMetres.delete(0, END)
+        self.txtMetres.insert(0, round(self.wallpaper.rolls * 10.05, 2)) #Rounded to as big numbers sometimes have very small decimal number due to float innacuracy
+        
+        self.lblRolls.config(text=f"Rolls: {self.wallpaper.rolls}")
         
         self.lblQuality.config(text=self.wallpaper.quality.name.capitalize())
         self.cvsMainDisp.delete("all")
