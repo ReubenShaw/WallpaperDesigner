@@ -107,6 +107,7 @@ class Main:
 
 class ViewWallpaper():
     """Class for the first page, that enables the creation of new wallpapers, dispalyed on startup and can be reaccessed as a modification page from the ViewOrder() window"""
+    
     def __init__(self, root: Tk = Tk(), wallpaper: Wallpaper = Wallpaper(), order: list = [], modIndex: int = -1) -> None:
         """First window, stored in the Main class and contains the second window within itself\n
         All parameters have default values where the initialise themselves, aside from modIndex which = -1
@@ -118,14 +119,7 @@ class ViewWallpaper():
         self.originalRoot = root 
         root.withdraw()
 
-        self.root = Toplevel() #TopLevel() as this can be invoked from the other window and as such needs to be able to fully recreate itself as a main window
-        self.root.title("Wallpaper Designer")
-        self.root.config(width=960, height=540)
-        self.root.focus()
-        self.root.grab_set()
-        self.root.resizable(False, False)
-        self.root.protocol('WM_DELETE_WINDOW', self.rootClose) #Needed as depending on which iteration of the window this is it may not be the main window, meaning if it's closed the program will not exit and additional logic is needed
-        self.root.bind("<FocusIn>", self.rootFocus)
+        self.initRoot()
 
         self.availableColours = ["purple", "DarkSlateGray4", "deep sky blue", "light sea green", "VioletRed2", "gold"]
         self.wallpaper = wallpaper
@@ -153,6 +147,16 @@ class ViewWallpaper():
         self.lblRolls = Label()
 
         self.drawWindow(self.root)
+        
+    def initRoot(self):
+        self.root = Toplevel() #TopLevel() as this can be invoked from the other window and as such needs to be able to fully recreate itself as a main window
+        self.root.title("Wallpaper Designer")
+        self.root.geometry("960x540+50+50")
+        self.root.focus()
+        self.root.grab_set()
+        self.root.resizable(False, False)
+        self.root.protocol('WM_DELETE_WINDOW', self.rootClose) #Needed as depending on which iteration of the window this is it may not be the main window, meaning if it's closed the program will not exit and additional logic is needed
+        self.root.bind("<FocusIn>", self.rootFocus)
 
     def drawWindow(self, root: Tk) -> None:
         """Window drawing for ViewWallpaper page"""
@@ -349,7 +353,7 @@ class ViewWallpaper():
         if IsNumber.check(self.txtMetres.get()) and float(self.txtMetres.get()) > 0: #Check to ensure it's a valid number and more than 1 roll is being added
             if self.modIndex > -1: #If modindex is > -1 then that means this window was accessed from the order window and is being used for modification, thus a wallpaper needs updating
                 self.order[self.modIndex] = self.wallpaper
-                self.reset()
+                self.reset(True)
                 self.modIndex = -1
                 self.drawWindow(self.root)
                 ViewOrder(self.order, self.root)
@@ -365,9 +369,11 @@ class ViewWallpaper():
     def orderClick(self) -> None:
         """Opens the order window"""
         
-        self.reset() #This makes sure if they come back to the window any half complete wallpapers are cleared
         if self.modIndex > -1: #Check if this window was accessed through the order window
             self.originalRoot.destroy() #Destroys the original root if so, as this is the original order window and you want it out of memory
+            self.modIndex = -1
+            
+        self.reset(True) #This makes sure if they come back to the window any half complete wallpapers are cleared
         ViewOrder(self.order, self.root)
 
     def calcCost(self) -> None:
@@ -377,8 +383,13 @@ class ViewWallpaper():
         self.lblCost.config(text=f"Cost: £{stringDisp}")
 
 
-    def reset(self) -> None:
+    def reset(self, destroy: bool = False) -> None:
         """Resets the window to display the default settings for wallpaper"""
+        
+        if destroy: #For resets where the page isn't closed, destroying the root is unecessary and looks messy
+            self.root.destroy() #This clean destroy was the only way to fix a bug when navigating between menus in a specific manner, otherwise ghost self.originalRoots could get caught
+            self.initRoot()
+            self.drawWindow(self.root)
         
         self.wallpaper = Wallpaper()
         self.liningOp.set(int(self.wallpaper.liningPaper))
@@ -402,12 +413,17 @@ class ViewWallpaper():
     def rootClose(self) -> None:
         """Called whenever the window is closed, performs a cleaner exit to ensure that other hidden windows don't hang the program"""
         
-        self.root.quit()
+        exit()
 
 
 
 class ViewOrder:
+    """Class for the second page that allows viewing all wallpapers in the order, can be accessed only through the ViewWallpaper() window"""
+    
     def __init__(self, order: list, root: Tk) -> None:
+        """All paramateres must be passed values\n
+        order must be a list of wallpapers, root must be the caller's root, so that it can be stored and removed later"""
+        
         self.originalRoot = root
         root.withdraw()
 
@@ -415,7 +431,7 @@ class ViewOrder:
         
         rootOrder = Toplevel()
         rootOrder.title("Wallpaper Designer")
-        rootOrder.config(width=960, height=540)
+        rootOrder.geometry("960x540+50+50")
         rootOrder.focus()
         rootOrder.grab_set()
         rootOrder.resizable(False, False)
@@ -566,8 +582,7 @@ class ViewOrder:
     def rootOrderClose(self) -> None:
         """Called whenever the window is closed, performs a cleaner exit to ensure that other hidden windows don't hang the program"""
         
-        self.originalRoot.destroy()
-        self.rootOrder.quit()
+        exit()
 
 
 class Draw:
@@ -592,26 +607,21 @@ class Draw:
                 canvas.create_rectangle(cx - rsx - sx, 0 + rsy, cx - rsx, sy + rsy, fill=fillCol, outline=colour)
                 canvas.create_rectangle(cx - rsx - sx, cy - rsy - sy, cx - rsx, cy - rsy, fill=fillCol, outline=colour)
         else:
-            mod = canvas.winfo_width() / 129
+            mod = float(cx-4)/52
             for y in range(2):
-                startx=2; starty=(y + 1) * 40 - 15
+                sx=2; sy=(y+1)*15+9
                 for x in range(5):
-                    canvas.create_polygon((startx+12.5)*mod,(starty+0)*mod, 
-                                          (startx+7.5)*mod,(starty+10)*mod, 
-                                          (startx+0)*mod,(starty+10)*mod, 
-                                          (startx+5)*mod,(starty+20)*mod, 
-                                          (startx+0)*mod,(starty+30)*mod, 
-                                          (startx+7.5)*mod,(starty+30)*mod, 
-                                          (startx+12.5)*mod,(starty+40)*mod, 
-                                          (startx+17.5)*mod,(starty+30)*mod, 
-                                          (startx+25)*mod,(starty+30)*mod, 
-                                          (startx+20)*mod,(starty+20)*mod, 
-                                          (startx+25)*mod,(starty+10)*mod, 
-                                          (startx+17.5)*mod,(starty+10)*mod, 
-                                          (startx+12.5)*mod,(starty+0)*mod,
-                                          fill=colour,
-                                          outline=colour)
-                    startx+=25
+                    canvas.create_polygon(sx*mod,sy*mod,
+                                          (sx+5)*mod, (sy-15)*mod,
+                                          (sx+10)*mod, sy*mod,
+                                          fill=colour, outline=colour)
+                    
+                    canvas.create_polygon(sx*mod, (sy-10)*mod,
+                                          (sx+5)*mod, (sy+5)*mod,
+                                          (sx+10)*mod,(sy-10)*mod,
+                                          fill=colour, outline=colour)
+                    
+                    sx += 10
 
     def drawArrow(canvas: Canvas, colour: str = "white") -> None:
         """Small subroutine used to draw the arrow on the order screen's return button"""
