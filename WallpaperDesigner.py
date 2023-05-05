@@ -88,7 +88,7 @@ class Main:
     def mainLoop() -> None:
         """Call to initialise loop"""
         
-        order = [] #Used just for testing purposes, so that an order can be created in here and passed to the main window
+        order : Wallpaper = [] #Used just for testing purposes, so that an order can be created in here and passed to the main window
         
         #Test data:
         
@@ -192,7 +192,7 @@ class ViewWallpaper():
         Draw.drawWallpaper(WallpaperQualities.EXPENSIVE, self.cvsSecondOp, self.wallpaper.colour)
 
 
-        frmColours = []
+        frmColours : Frame = []
         for i in range(len(self.availableColours)):
             frmColours.append(Frame(frmMain, width=self.cvsMainDisp.winfo_width()/7, height=self.cvsMainDisp.winfo_height()/7, bg=self.availableColours[i]))
             frmColours[i].bind("<Button-1>", self.colourClick) #All different colours are routed through a single event function, to decrease repetitive code
