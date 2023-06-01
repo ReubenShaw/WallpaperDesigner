@@ -375,15 +375,9 @@ class ViewWallpaper():
     def additionsSelect(self) -> None:
         """Handles both checkbutton's tick and untick events"""
         
-        if self.liningOp.get() == 0:
-            self.wallpaper.liningPaper = False
-        else: 
-            self.wallpaper.liningPaper = True
-            
-        if self.pasteOp.get() == 0:
-            self.wallpaper.paste = False
-        else: 
-            self.wallpaper.paste = True
+        self.wallpaper.liningPaper = bool(self.liningOp.get())
+        self.wallpaper.paste = bool(self.pasteOp.get())
+        
         self.calcCost()
         
     def modificationsSelect(self) -> None:
