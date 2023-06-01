@@ -1,7 +1,7 @@
 """
 IMPORTANT INFORMATION FOR REVIEWER:
 
-Lines 94-107 have commented out test data, uncomment to get immediate data to test with
+Lines 138-153 have commented out test data, uncomment to get immediate data to test with
 """
 
 #The program:
@@ -34,13 +34,56 @@ class Wallpaper:
         All parameteres default to the base properties of a wallpaper:\n
         Quality: Cheap, Colour: Purple, Rolls: 1, Additions: None,, Lining Paper: False, Paste: False"""
         
-        self.quality = quality
-        self.colour = colour
-        self.rolls = rolls
+        self._quality = quality
+        self._colour = colour
+        self._rolls = rolls
 
-        self.addition = addition
-        self.liningPaper = liningPaper
-        self.paste = paste
+        self._addition = addition
+        self._liningPaper = liningPaper
+        self._paste = paste
+    
+    #Get setters
+    @property
+    def quality(self) -> WallpaperQualities:
+        return self._quality
+    @quality.setter
+    def quality(self, value) -> None:
+        self._quality = value
+        
+    @property
+    def colour(self) -> str:
+        return self._colour
+    @colour.setter
+    def colour(self, value) -> None:
+        self._colour = value
+        
+    @property
+    def rolls(self) -> int:
+        return self._rolls
+    @rolls.setter
+    def rolls(self, value) -> None:
+        self._rolls = value
+        
+    @property
+    def addition(self) -> WallpaperAdditions:
+        return self._addition
+    @addition.setter
+    def addition(self, value) -> None:
+        self._addition = value
+        
+    @property
+    def liningPaper(self) -> bool:
+        return self._liningPaper
+    @liningPaper.setter
+    def liningPaper(self, value) -> None:
+        self._liningPaper = value
+        
+    @property
+    def paste(self) -> bool:
+        return self._paste
+    @paste.setter
+    def paste(self, value) -> None:
+        self._paste = value
 
     def __str__(self) -> str:
         """Overridden for the display of the wallpaper's data in the view order page's labels"""
@@ -67,7 +110,7 @@ class Wallpaper:
         cost = 0
         if self.rolls > 0: #If used when displaying price to ensure that if the metres entry box is blank or holding an incomplete decimal number that the displayed output is not incorrect
             cost += self.quality.value * totalArea * 10000 #*10000 is to convert the values which are in cm^2 to m^2, which is the units totalArea uses
-            cost += self.addition.value * totalHeight
+            cost += self.addition.value * math.ceil(totalHeight / 1)
 
             #3 part if statement as if there's lining paper and paste the paste has to be doubled, as one n amount is for the wallpaper and an equal n amount for the lining
             if self.liningPaper and self.paste: 
@@ -98,12 +141,14 @@ class Main:
         # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=23))
         # order.append(Wallpaper(paste=True, colour="VioletRed2", rolls=8))
         # order.append(Wallpaper(colour="gold", liningPaper=True, rolls=1))
+        # order.append(Wallpaper(colour="gold", rolls=7))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=18))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.EMBOSSING, paste=True, liningPaper=True, rolls=25))
         # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue", rolls=3))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=2))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=15))
-        #order.append(Wallpaper(colour="gold", liningPaper=True))
+        # order.append(Wallpaper(colour="gold", liningPaper=True))
+        # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, colour="deep sky blue", rolls=1))
         # order.append(Wallpaper(addition=WallpaperAdditions.FOIL, colour="deep sky blue"))
         # order.append(Wallpaper(WallpaperQualities.EXPENSIVE, addition=WallpaperAdditions.GLITTER, paste=True, rolls=5))
         
@@ -278,6 +323,18 @@ class ViewWallpaper():
         lblTitle = Label(root, text="Design a new Wallpaper")
         lblTitle.config(font=tf.Font(size=28))
         lblTitle.place(anchor=NW, x=38, y=12)
+        root.update()
+        
+        lblPrices = Label(root, text="Cheap Wallpaper = £156.78 per roll\n" +
+                         "Expensive Wallpaper = £313.56 per roll\n\n" +
+                         "Foil = £1.32 per roll\n" + 
+                         "Glitter = £1.98 per roll\n" +
+                         "Embossing = £0.66 per roll\n\n" +
+                         "Lining Paper = £7.63 per 20 metres\n" +
+                         "Wallpaper Paste = £13.99 per 53m^2\n\n" + 
+                         "Please note, double the amount of wallpaper paste\nis needed if lining paper is also purchased", justify="left")
+        lblPrices.config(font=tf.Font(size=14))
+        lblPrices.place(anchor=NW, x=lblTitle.winfo_x() - 16, y=lblTitle.winfo_y() + lblTitle.winfo_height() + 48)
 
         btnOrder = Button(root, fg="white", bg="orange", command=self.orderClick, font=tf.Font(size=12, weight="bold"))
         if self.modIndex > -1: #Same as the previous button, just a minor rewording to try and promote more concistency depending on how the user accesses the window
