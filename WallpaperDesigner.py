@@ -12,6 +12,9 @@ import tkinter.font as tf #For both tkinter.font and messagebox I was unable to 
 import math
 import re
 
+WIDTH = 0.52
+HEIGHT = 10.05 #Constants for wallpaper dimensions
+
 class WallpaperQualities(Enum):
     """Used for the quality which is linked to design, the values refer to the cost per cm^2 of wallpaper\n
     Cheap = £0.003, Expensive = £0.006"""
@@ -101,11 +104,8 @@ class Wallpaper:
     def calcFinalCost(self) -> float:
         """Used for calculating the cost of the wallpaper object, works persuming that the width is 0.52m and the height is 10.05m"""
         
-        width = 0.52
-        height = 10.05
-
-        totalHeight = height * self.rolls #unit: metres
-        totalArea = width * height * self.rolls #unit: metres^2
+        totalHeight = HEIGHT * self.rolls #unit: metres
+        totalArea = WIDTH * HEIGHT * self.rolls #unit: metres^2
 
         cost = 0
         if self.rolls > 0: #If used when displaying price to ensure that if the metres entry box is blank or holding an incomplete decimal number that the displayed output is not incorrect
